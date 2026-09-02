@@ -55,6 +55,8 @@ needed.
 
 ## Using the app
 
+- Tap the baby's name in the header (next to the pencil icon) to rename it.
+  "Team" stays fixed; the name is shared and synced live to both of you.
 - **Log** tab: three swipeable timelines — Sleep, Awake, Feed.
   - **Sleep** and **Awake** are tracked activities: the button at the top
     says "Start" when nothing's running and "End" when something is —

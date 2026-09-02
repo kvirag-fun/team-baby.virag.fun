@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntries } from "@/hooks/useEntries";
 import { LoginScreen } from "@/components/LoginScreen";
+import { AppHeader } from "@/components/AppHeader";
 import { BottomNav, type Tab } from "@/components/BottomNav";
 import { LogPager } from "@/components/LogPager";
 import { CalendarView } from "@/components/CalendarView";
@@ -51,9 +52,7 @@ function AppShell({
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col pb-24">
-      <header className="px-4 pb-2 pt-[calc(env(safe-area-inset-top)+1rem)]">
-        <h1 className="text-lg font-semibold">Team Baby</h1>
-      </header>
+      <AppHeader />
 
       {error && <p className="px-4 pb-2 text-sm text-rose-400">{error}</p>}
       {loading ? (
