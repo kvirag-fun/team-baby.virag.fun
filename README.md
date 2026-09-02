@@ -53,6 +53,16 @@ To change the shared password later: Firebase Console > Authentication >
 Users > the `timka@team.family` row > reset password. No redeploy
 needed.
 
+## Installing on your phone
+
+The site is a PWA, so it installs like a real app — its own icon, no
+Safari/Chrome address bar, full-screen. Nothing to download from a store.
+
+- **iOS**: open the site in Safari (must be Safari, not Chrome) → Share
+  button → **Add to Home Screen**.
+- **Android**: open the site in Chrome → menu (⋮) → **Add to Home
+  screen** / **Install app**.
+
 ## Using the app
 
 - Tap the baby's name in the header (next to the pencil icon) to rename it.
