@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { Moon, Sun, Milk } from "lucide-react";
+import { Moon, MoonStar, Sun, Milk } from "lucide-react";
 import type { Entry } from "@/lib/types";
 import { colorFor, labelFor } from "@/lib/colors";
 import { fmtDayHeading, fmtDuration, fmtTime, startOfDay } from "@/lib/time";
 
 function iconFor(entry: Entry) {
-  if (entry.type === "sleep") return Moon;
+  if (entry.type === "sleep") return entry.sleepType === "overnight" ? MoonStar : Moon;
   if (entry.type === "awake") return Sun;
   return Milk;
 }

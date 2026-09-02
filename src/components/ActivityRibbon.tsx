@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Moon, Sun, Milk, type LucideIcon } from "lucide-react";
+import { Loader2, Moon, MoonStar, Sun, Milk, type LucideIcon } from "lucide-react";
 import type { Entry } from "@/lib/types";
 import { findOpenEntry, logFeed, startAwake, startSleep, stopEntry } from "@/lib/activity";
 import { fmtDuration, fmtTime } from "@/lib/time";
@@ -128,7 +128,7 @@ function SleepRibbon({
           }`}
         >
           <span className="flex items-center gap-3">
-            <Moon className="h-6 w-6" />
+            {isOvernight ? <MoonStar className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
             <span className="text-left">
               <span className="block text-lg font-semibold">
                 {isOvernight ? "Overnight" : "Nap"} since {fmtTime(open.startTime)}
@@ -147,7 +147,7 @@ function SleepRibbon({
       {overnightAvailable ? (
         <div className="grid grid-cols-2 gap-2">
           <QuickButton icon={Moon} label="Nap" bg="bg-indigo-400" text="text-indigo-950" busy={busy} onClick={() => start("nap")} />
-          <QuickButton icon={Moon} label="Overnight" bg="bg-indigo-800" text="text-indigo-50" busy={busy} onClick={() => start("overnight")} />
+          <QuickButton icon={MoonStar} label="Overnight" bg="bg-indigo-800" text="text-indigo-50" busy={busy} onClick={() => start("overnight")} />
         </div>
       ) : (
         <QuickButton icon={Moon} label="Nap" bg="bg-indigo-400" text="text-indigo-950" busy={busy} onClick={() => start("nap")} />
