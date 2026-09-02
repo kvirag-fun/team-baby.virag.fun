@@ -1,8 +1,13 @@
 import { createEntry, updateEntry } from "./entries";
 import type { Entry, EntryType, FeedType } from "./types";
 
-/** The currently-running entry of a type, if any (endTime === null means "still going"). */
-export function findOpenEntry(entries: Entry[], type: EntryType): Entry | null {
+/**
+ * The currently-running entry of a type, if any (endTime === null means
+ * "still going"). Only meaningful for sleep/awake — feed entries always have
+ * endTime === null since feed is a single moment, not a tracked range, so
+ * this should not be called with type "feed".
+ */
+export function findOpenEntry(entries: Entry[], type: "sleep" | "awake"): Entry | null {
   return entries.find((e) => e.type === type && e.endTime == null) ?? null;
 }
 
@@ -35,7 +40,8 @@ export async function startSleepOrAwake(entries: Entry[], type: "sleep" | "awake
   });
 }
 
-export async function startFeed(feedType: FeedType) {
+/** Feed is a single moment, not a tracked range — endTime is always null/unused. */
+export async function logFeed(feedType: FeedType) {
   await createEntry({
     type: "feed",
     startTime: Date.now(),

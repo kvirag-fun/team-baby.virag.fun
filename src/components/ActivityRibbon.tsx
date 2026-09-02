@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Loader2, Moon, Sun, Milk } from "lucide-react";
 import type { Entry } from "@/lib/types";
-import { findOpenEntry, startFeed, startSleepOrAwake, stopEntry } from "@/lib/activity";
+import { findOpenEntry, logFeed, startSleepOrAwake, stopEntry } from "@/lib/activity";
 import { fmtDuration, fmtTime } from "@/lib/time";
 import { useTick } from "@/hooks/useTick";
 
@@ -14,7 +14,7 @@ export function ActivityRibbon({ type, entries }: { type: "sleep" | "awake" | "f
   useTick();
   const [busy, setBusy] = useState(false);
 
-  if (type === "feed") return <FeedRibbon entries={entries} busy={busy} setBusy={setBusy} />;
+  if (type === "feed") return <FeedRibbon busy={busy} setBusy={setBusy} />;
 
   const rangeType = type;
   const meta = META[rangeType];
@@ -55,31 +55,14 @@ export function ActivityRibbon({ type, entries }: { type: "sleep" | "awake" | "f
   );
 }
 
-function FeedRibbon({
-  entries,
-  busy,
-  setBusy,
-}: {
-  entries: Entry[];
-  busy: boolean;
-  setBusy: (b: boolean) => void;
-}) {
-  const open = findOpenEntry(entries, "feed");
-
-  async function start(feedType: "formula" | "breastmilk") {
+// Feed isn't a tracked, ongoing activity like sleep/awake — it's a single
+// moment (with an amount). Tapping logs it immediately at the current time;
+// amount can be filled in afterward by tapping the entry below.
+function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) => void }) {
+  async function log(feedType: "formula" | "breastmilk") {
     setBusy(true);
     try {
-      await startFeed(feedType);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function end() {
-    if (!open) return;
-    setBusy(true);
-    try {
-      await stopEntry(open);
+      await logFeed(feedType);
     } finally {
       setBusy(false);
     }
@@ -87,45 +70,24 @@ function FeedRibbon({
 
   return (
     <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
-      {open ? (
+      <div className="grid grid-cols-2 gap-2">
         <button
-          onClick={end}
+          onClick={() => log("breastmilk")}
           disabled={busy}
-          className={`flex w-full items-center justify-between rounded-2xl px-5 py-4 disabled:opacity-60 ${
-            open.feedType === "breastmilk" ? "bg-emerald-950 text-emerald-200 ring-2 ring-emerald-600" : "bg-emerald-950 text-emerald-100 ring-2 ring-emerald-300"
-          }`}
+          className="flex flex-col items-center gap-1 rounded-2xl bg-emerald-700 py-4 text-emerald-50 disabled:opacity-60"
         >
-          <span className="flex items-center gap-3">
-            <Milk className="h-6 w-6" />
-            <span className="text-left">
-              <span className="block text-lg font-semibold">
-                {open.feedType === "breastmilk" ? "Breastmilk" : "Formula"} since {fmtTime(open.startTime)}
-              </span>
-              <span className="block text-sm opacity-80">{fmtDuration(open.startTime, null)} so far</span>
-            </span>
-          </span>
-          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <span className="rounded-full bg-black/20 px-3 py-1 text-sm font-medium">End</span>}
+          {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <Milk className="h-6 w-6" />}
+          <span className="font-semibold">Log Breastmilk</span>
         </button>
-      ) : (
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => start("breastmilk")}
-            disabled={busy}
-            className="flex flex-col items-center gap-1 rounded-2xl bg-emerald-700 py-4 text-emerald-50 disabled:opacity-60"
-          >
-            <Milk className="h-6 w-6" />
-            <span className="font-semibold">Start Breastmilk</span>
-          </button>
-          <button
-            onClick={() => start("formula")}
-            disabled={busy}
-            className="flex flex-col items-center gap-1 rounded-2xl bg-emerald-300 py-4 text-emerald-950 disabled:opacity-60"
-          >
-            <Milk className="h-6 w-6" />
-            <span className="font-semibold">Start Formula</span>
-          </button>
-        </div>
-      )}
+        <button
+          onClick={() => log("formula")}
+          disabled={busy}
+          className="flex flex-col items-center gap-1 rounded-2xl bg-emerald-300 py-4 text-emerald-950 disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-6 w-6 animate-spin" /> : <Milk className="h-6 w-6" />}
+          <span className="font-semibold">Log Formula</span>
+        </button>
+      </div>
     </div>
   );
 }

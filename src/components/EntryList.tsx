@@ -54,11 +54,17 @@ export function EntryList({ entries, onEdit }: { entries: Entry[]; onEdit: (e: E
                         )}
                       </span>
                       <span className="text-sm text-slate-400">
-                        {fmtTime(entry.startTime)} – {entry.endTime ? fmtTime(entry.endTime) : "now"} ·{" "}
-                        {fmtDuration(entry.startTime, entry.endTime)}
+                        {entry.type === "feed" ? (
+                          fmtTime(entry.startTime)
+                        ) : (
+                          <>
+                            {fmtTime(entry.startTime)} – {entry.endTime ? fmtTime(entry.endTime) : "now"} ·{" "}
+                            {fmtDuration(entry.startTime, entry.endTime)}
+                          </>
+                        )}
                       </span>
                     </span>
-                    {!entry.endTime && (
+                    {entry.type !== "feed" && !entry.endTime && (
                       <span className="shrink-0 rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
                         ongoing
                       </span>

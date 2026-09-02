@@ -37,7 +37,7 @@ export function EntrySheet({
       const entry: NewEntry = {
         type,
         startTime,
-        endTime: ongoing ? null : fromInputValue(end),
+        endTime: type === "feed" ? null : ongoing ? null : fromInputValue(end),
         feedType: type === "feed" ? feedType : null,
         amount: type === "feed" && amount !== "" ? Number(amount) : null,
         amountUnit: type === "feed" ? unit : null,
@@ -80,7 +80,7 @@ export function EntrySheet({
           </div>
 
           <label className="flex flex-col gap-1 text-sm text-slate-400">
-            Start
+            {type === "feed" ? "Time" : "Start"}
             <input
               type="datetime-local"
               value={start}
@@ -89,25 +89,29 @@ export function EntrySheet({
             />
           </label>
 
-          <label className="flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={ongoing}
-              onChange={(e) => setOngoing(e.target.checked)}
-              className="h-4 w-4"
-            />
-            Still going (no end time yet)
-          </label>
-          {!ongoing && (
-            <label className="flex flex-col gap-1 text-sm text-slate-400">
-              End
-              <input
-                type="datetime-local"
-                value={end}
-                onChange={(e) => setEnd(e.target.value)}
-                className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
-              />
-            </label>
+          {type !== "feed" && (
+            <>
+              <label className="flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={ongoing}
+                  onChange={(e) => setOngoing(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                Still going (no end time yet)
+              </label>
+              {!ongoing && (
+                <label className="flex flex-col gap-1 text-sm text-slate-400">
+                  End
+                  <input
+                    type="datetime-local"
+                    value={end}
+                    onChange={(e) => setEnd(e.target.value)}
+                    className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                  />
+                </label>
+              )}
+            </>
           )}
 
           {type === "feed" && (

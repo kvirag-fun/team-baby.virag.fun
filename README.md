@@ -55,13 +55,15 @@ needed.
 
 ## Using the app
 
-- **Log** tab: three swipeable timelines — Sleep, Awake, Feed — each with a
-  big color-coded button at the top. Nothing running for that activity? It
-  says "Start" and starts it now, no typing a time. Something running? It
-  says "End" and closes it out. That state comes from Firestore, so it
-  survives a reload or switching devices. Starting Sleep automatically ends
-  Awake, and vice versa. Feed starts by picking Formula or Breastmilk
-  (two shades of green) and ends the same way.
+- **Log** tab: three swipeable timelines — Sleep, Awake, Feed.
+  - **Sleep** and **Awake** are tracked activities: the button at the top
+    says "Start" when nothing's running and "End" when something is —
+    that state comes from Firestore, so it survives a reload or switching
+    devices. Starting one automatically ends the other.
+  - **Feed** is a single moment, not something you start and stop —
+    tapping "Log Breastmilk" or "Log Formula" (two shades of green) logs
+    it immediately at that timestamp. Add the amount afterward by tapping
+    the entry in the list below.
 - Tap **+** any time to add or edit an entry manually with exact times —
   useful for backdating something you forgot to start/stop live.
 - **Calendar** tab: a day or week grid like a calendar app, blocks for
