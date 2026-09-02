@@ -18,7 +18,7 @@ const firebaseConfig = {
 
 // The single shared account both of you sign into. Its password is the
 // "site password" — set it in the Firebase Console (Authentication > Users).
-export const SHARED_EMAIL = "family@team-baby.local";
+export const SHARED_EMAIL = "timka@team.family";
 
 export const app = initializeApp(firebaseConfig);
 export const auth = initializeAuth(app, {

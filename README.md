@@ -12,7 +12,7 @@ GitHub Pages; data lives in Firebase (Firestore), not in the browser.
   that's logged in.
 - **Access control** is enforced server-side by Firestore Security Rules
   (`firestore.rules`), not by hiding a URL. Only one Firebase account
-  (`family@team-baby.local`) may read or write, and that account's
+  (`timka@team.family`) may read or write, and that account's
   password *is* the site's shared password — Firebase itself checks it on
   every login (and rate-limits guesses), so nothing password-related is
   ever embedded in the shipped JS.
@@ -28,7 +28,7 @@ GitHub Pages; data lives in Firebase (Firestore), not in the browser.
 4. **Enable Email/Password sign-in**: Build > Authentication > Sign-in
    method > enable "Email/Password".
 5. **Create the shared account**: Authentication > Users > Add user:
-   - Email: `family@team-baby.local`
+   - Email: `timka@team.family`
    - Password: **this becomes the shared password you and your wife type
      into the app.** Pick a long, unique one.
 6. **Get the web config**: Project settings (gear icon) > General > "Your
@@ -50,17 +50,20 @@ GitHub Pages; data lives in Firebase (Firestore), not in the browser.
    automatically.
 
 To change the shared password later: Firebase Console > Authentication >
-Users > the `family@team-baby.local` row > reset password. No redeploy
+Users > the `timka@team.family` row > reset password. No redeploy
 needed.
 
 ## Using the app
 
-- Tap **+** to log Sleep, Awake, or a Feed (Formula / Breastmilk, with
-  amount). Sleep/Awake are time ranges — leave "still going" checked for
-  an entry with no end yet, then edit it later to close it out.
-- **Timeline** tab: chronological list, filterable by type; entries are
-  color-coded (indigo = sleep, amber = awake, two shades of green = the
-  two feed types).
+- **Log** tab: three swipeable timelines — Sleep, Awake, Feed — each with a
+  big color-coded button at the top. Nothing running for that activity? It
+  says "Start" and starts it now, no typing a time. Something running? It
+  says "End" and closes it out. That state comes from Firestore, so it
+  survives a reload or switching devices. Starting Sleep automatically ends
+  Awake, and vice versa. Feed starts by picking Formula or Breastmilk
+  (two shades of green) and ends the same way.
+- Tap **+** any time to add or edit an entry manually with exact times —
+  useful for backdating something you forgot to start/stop live.
 - **Calendar** tab: a day or week grid like a calendar app, blocks for
   sleep/awake and dots for feeds.
 - **Stats** tab: weekly/monthly charts of sleep vs. awake hours and feed
