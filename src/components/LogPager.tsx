@@ -45,7 +45,7 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
         ref={containerRef}
         onScroll={onScroll}
         className="flex snap-x snap-mandatory overflow-x-auto"
-        style={{ scrollbarWidth: "none" }}
+        style={{ scrollbarWidth: "none", touchAction: "pan-x" }}
       >
         {PAGES.map((p) => (
           <div key={p.type} className="w-full shrink-0 snap-start">
