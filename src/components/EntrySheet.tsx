@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Moon, Sun, Milk, Trash2, X } from "lucide-react";
-import type { AmountUnit, Entry, EntryType, FeedType, NewEntry } from "@/lib/types";
+import type { AmountUnit, Entry, EntryType, FeedType, NewEntry, SleepType } from "@/lib/types";
 import { toInputValue, fromInputValue } from "@/lib/time";
 
 const TYPE_OPTIONS: { key: EntryType; label: string; icon: typeof Moon; active: string }[] = [
@@ -25,6 +25,7 @@ export function EntrySheet({
   const [ongoing, setOngoing] = useState(initial ? initial.endTime == null : false);
   const [end, setEnd] = useState(toInputValue(initial?.endTime ?? Date.now()));
   const [feedType, setFeedType] = useState<FeedType>(initial?.feedType ?? "breastmilk");
+  const [sleepType, setSleepType] = useState<SleepType>(initial?.sleepType ?? "nap");
   const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount) : "");
   const [unit, setUnit] = useState<AmountUnit>(initial?.amountUnit ?? "ml");
   const [note, setNote] = useState(initial?.note ?? "");
@@ -39,6 +40,7 @@ export function EntrySheet({
         startTime,
         endTime: type === "feed" ? null : ongoing ? null : fromInputValue(end),
         feedType: type === "feed" ? feedType : null,
+        sleepType: type === "sleep" ? sleepType : null,
         amount: type === "feed" && amount !== "" ? Number(amount) : null,
         amountUnit: type === "feed" ? unit : null,
         note,
@@ -112,6 +114,31 @@ export function EntrySheet({
                 </label>
               )}
             </>
+          )}
+
+          {type === "sleep" && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setSleepType("nap")}
+                className={`rounded-xl border py-2 text-sm font-medium ${
+                  sleepType === "nap"
+                    ? "border-transparent bg-indigo-400 text-indigo-950"
+                    : "border-slate-700 text-slate-400"
+                }`}
+              >
+                Nap
+              </button>
+              <button
+                onClick={() => setSleepType("overnight")}
+                className={`rounded-xl border py-2 text-sm font-medium ${
+                  sleepType === "overnight"
+                    ? "border-transparent bg-indigo-800 text-indigo-50"
+                    : "border-slate-700 text-slate-400"
+                }`}
+              >
+                Overnight
+              </button>
+            </div>
           )}
 
           {type === "feed" && (

@@ -1,5 +1,6 @@
 export type EntryType = "sleep" | "awake" | "feed";
 export type FeedType = "formula" | "breastmilk";
+export type SleepType = "nap" | "overnight";
 export type AmountUnit = "ml" | "oz";
 
 export interface Entry {
@@ -10,6 +11,7 @@ export interface Entry {
   /** epoch millis; null while an ongoing sleep/awake stretch has no end yet */
   endTime: number | null;
   feedType: FeedType | null;
+  sleepType: SleepType | null;
   amount: number | null;
   amountUnit: AmountUnit | null;
   note: string;

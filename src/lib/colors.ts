@@ -1,9 +1,16 @@
 import type { Entry } from "./types";
 
-// Three distinct hues (sleep / awake / feed); feed splits into two shades of
-// the same green so it still reads as "feed" while distinguishing the type.
+// Three distinct hues (sleep / awake / feed); sleep and feed each split into
+// two shades of their hue so they still read as "sleep"/"feed" while
+// distinguishing the sub-type (nap vs overnight, formula vs breastmilk).
 export const COLORS = {
-  sleep: { bg: "bg-indigo-500", text: "text-indigo-950", ring: "ring-indigo-400", dot: "#6366f1" },
+  sleepNap: { bg: "bg-indigo-400", text: "text-indigo-950", ring: "ring-indigo-300", dot: "#818cf8" },
+  sleepOvernight: {
+    bg: "bg-indigo-800",
+    text: "text-indigo-50",
+    ring: "ring-indigo-600",
+    dot: "#3730a3",
+  },
   awake: { bg: "bg-amber-400", text: "text-amber-950", ring: "ring-amber-300", dot: "#fbbf24" },
   feedFormula: {
     bg: "bg-emerald-300",
@@ -19,14 +26,14 @@ export const COLORS = {
   },
 } as const;
 
-export function colorFor(entry: Pick<Entry, "type" | "feedType">) {
-  if (entry.type === "sleep") return COLORS.sleep;
+export function colorFor(entry: Pick<Entry, "type" | "feedType" | "sleepType">) {
+  if (entry.type === "sleep") return entry.sleepType === "overnight" ? COLORS.sleepOvernight : COLORS.sleepNap;
   if (entry.type === "awake") return COLORS.awake;
   return entry.feedType === "breastmilk" ? COLORS.feedBreastmilk : COLORS.feedFormula;
 }
 
-export function labelFor(entry: Pick<Entry, "type" | "feedType">) {
-  if (entry.type === "sleep") return "Sleep";
+export function labelFor(entry: Pick<Entry, "type" | "feedType" | "sleepType">) {
+  if (entry.type === "sleep") return entry.sleepType === "overnight" ? "Overnight" : "Nap";
   if (entry.type === "awake") return "Awake";
   return entry.feedType === "breastmilk" ? "Breastmilk" : "Formula";
 }

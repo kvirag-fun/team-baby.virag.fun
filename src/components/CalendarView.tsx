@@ -117,7 +117,8 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-400">
-        <Legend color="bg-indigo-500" label="Sleep" />
+        <Legend color="bg-indigo-400" label="Nap" />
+        <Legend color="bg-indigo-800" label="Overnight" />
         <Legend color="bg-amber-400" label="Awake" />
         <Legend color="bg-emerald-300" label="Formula" />
         <Legend color="bg-emerald-700" label="Breastmilk" />

@@ -61,7 +61,10 @@ needed.
   - **Sleep** and **Awake** are tracked activities: the button at the top
     says "Start" when nothing's running and "End" when something is —
     that state comes from Firestore, so it survives a reload or switching
-    devices. Starting one automatically ends the other.
+    devices. Starting one automatically ends the other. Sleep splits into
+    two shades of indigo like Feed does: **Nap** is always offered; **Overnight**
+    only appears as a quick-start option from 18:00 onward (you can still
+    set it manually any time via **+**).
   - **Feed** is a single moment, not something you start and stop —
     tapping "Log Breastmilk" or "Log Formula" (two shades of green) logs
     it immediately at that timestamp. Add the amount afterward by tapping

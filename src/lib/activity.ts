@@ -1,5 +1,5 @@
 import { createEntry, updateEntry } from "./entries";
-import type { Entry, EntryType, FeedType } from "./types";
+import type { Entry, FeedType, SleepType } from "./types";
 
 /**
  * The currently-running entry of a type, if any (endTime === null means
@@ -17,23 +17,41 @@ export async function stopEntry(entry: Entry, endTime = Date.now()) {
     startTime: entry.startTime,
     endTime,
     feedType: entry.feedType,
+    sleepType: entry.sleepType,
     amount: entry.amount,
     amountUnit: entry.amountUnit,
     note: entry.note,
   });
 }
 
-/** Starts sleep or awake now; if the other of the pair is running, closes it first. */
-export async function startSleepOrAwake(entries: Entry[], type: "sleep" | "awake") {
+/** Starts a sleep stretch now; if awake is running, closes it first. */
+export async function startSleep(entries: Entry[], sleepType: SleepType) {
   const now = Date.now();
-  const other: EntryType = type === "sleep" ? "awake" : "sleep";
-  const openOther = findOpenEntry(entries, other);
-  if (openOther) await stopEntry(openOther, now);
+  const openAwake = findOpenEntry(entries, "awake");
+  if (openAwake) await stopEntry(openAwake, now);
   await createEntry({
-    type,
+    type: "sleep",
     startTime: now,
     endTime: null,
     feedType: null,
+    sleepType,
+    amount: null,
+    amountUnit: null,
+    note: "",
+  });
+}
+
+/** Starts an awake stretch now; if sleep is running, closes it first. */
+export async function startAwake(entries: Entry[]) {
+  const now = Date.now();
+  const openSleep = findOpenEntry(entries, "sleep");
+  if (openSleep) await stopEntry(openSleep, now);
+  await createEntry({
+    type: "awake",
+    startTime: now,
+    endTime: null,
+    feedType: null,
+    sleepType: null,
     amount: null,
     amountUnit: null,
     note: "",
@@ -47,6 +65,7 @@ export async function logFeed(feedType: FeedType) {
     startTime: Date.now(),
     endTime: null,
     feedType,
+    sleepType: null,
     amount: null,
     amountUnit: "ml",
     note: "",
