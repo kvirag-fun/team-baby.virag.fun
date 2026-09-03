@@ -10,6 +10,11 @@ const PAGES: { type: EntryType; label: string; dot: string }[] = [
 ];
 
 const SWIPE_AXIS_THRESHOLD = 8;
+// Drag past 22% of the page width to change pages, or flick quickly a
+// shorter distance — matches typical mobile carousel feel instead of
+// requiring the drag to cross the halfway point.
+const SWIPE_DISTANCE_FRACTION = 0.22;
+const SWIPE_VELOCITY_PX_PER_MS = 0.5;
 
 export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: Entry) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,13 +48,19 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
 
     let startX = 0;
     let startY = 0;
+    let startScrollLeft = 0;
     let lastX = 0;
+    let lastT = 0;
+    let velocity = 0; // px/ms, smoothed
     let axis: "x" | "y" | null = null;
 
     function onTouchStart(e: TouchEvent) {
       const t = e.touches[0];
       startX = lastX = t.clientX;
       startY = t.clientY;
+      startScrollLeft = el.scrollLeft;
+      lastT = e.timeStamp;
+      velocity = 0;
       axis = null;
     }
 
@@ -63,15 +74,28 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
       }
       if (axis === "x") {
         e.preventDefault();
-        el.scrollLeft -= t.clientX - lastX;
+        const dt = Math.max(1, e.timeStamp - lastT);
+        const dx = t.clientX - lastX;
+        velocity = dx / dt;
+        el.scrollLeft -= dx;
         lastX = t.clientX;
+        lastT = e.timeStamp;
       }
     }
 
     function onTouchEnd() {
       if (axis === "x") {
-        const i = Math.round(el.scrollLeft / el.clientWidth);
-        el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+        const width = el.clientWidth;
+        const basePage = Math.round(startScrollLeft / width);
+        const dragFraction = (el.scrollLeft - startScrollLeft) / width;
+        let target = basePage;
+        if (Math.abs(dragFraction) > SWIPE_DISTANCE_FRACTION || Math.abs(velocity) > SWIPE_VELOCITY_PX_PER_MS) {
+          const direction = dragFraction !== 0 ? Math.sign(dragFraction) : Math.sign(velocity);
+          target = basePage + direction;
+        }
+        const maxPage = PAGES.length - 1;
+        target = Math.min(maxPage, Math.max(0, target));
+        el.scrollTo({ left: target * width, behavior: "smooth" });
       }
       axis = null;
     }
