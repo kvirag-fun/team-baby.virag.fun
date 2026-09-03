@@ -110,8 +110,13 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
           if (overscroll !== 0) setOverscroll(0);
         }
 
+        // Velocity of scrollLeft, not raw finger movement — finger moving
+        // right decreases scrollLeft (reveals the previous page), so this is
+        // the negative of finger velocity. Must match dragFraction's sign
+        // convention below, since onTouchEnd falls back to this when
+        // dragFraction is pinned at exactly 0 (clamped at an edge).
         const dt = Math.max(1, e.timeStamp - lastT);
-        velocity = (t.clientX - lastX) / dt;
+        velocity = (lastX - t.clientX) / dt;
         lastX = t.clientX;
         lastT = e.timeStamp;
       }
