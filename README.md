@@ -67,7 +67,7 @@ Safari/Chrome address bar, full-screen. Nothing to download from a store.
 
 - Tap the baby's name in the header (next to the pencil icon) to rename it.
   "Team" stays fixed; the name is shared and synced live to both of you.
-- **Log** tab: three swipeable timelines — Sleep, Awake, Feed.
+- **Log** tab: four swipeable timelines — Sleep, Awake, Feed, Supplements.
   - **Sleep** and **Awake** are tracked activities: the button at the top
     says "Start" when nothing's running and "End" when something is —
     that state comes from Firestore, so it survives a reload or switching
@@ -75,16 +75,17 @@ Safari/Chrome address bar, full-screen. Nothing to download from a store.
     two shades of indigo like Feed does: **Nap** is always offered; **Overnight**
     only appears as a quick-start option during the evening/night window
     (18:00–05:59) — you can still set it manually any time via **+**.
-  - **Feed** is a single moment, not something you start and stop —
-    tapping "Log Breastmilk" or "Log Formula" (two shades of green) logs
-    it immediately at that timestamp. Add the amount afterward by tapping
+  - **Feed** and **Supplements** are single moments, not something you
+    start and stop — tapping "Log Breastmilk"/"Log Formula" (two shades of
+    green) or "Log Vitamin D"/"Log Iron" (two shades of red) logs it
+    immediately at that timestamp. Add a feed amount afterward by tapping
     the entry in the list below.
 - Tap **+** any time to add or edit an entry manually with exact times —
   useful for backdating something you forgot to start/stop live.
 - **Calendar** tab: a day or week grid like a calendar app, blocks for
-  sleep/awake and dots for feeds.
-- **Stats** tab: weekly/monthly charts of sleep vs. awake hours and feed
-  counts.
+  sleep/awake and dots for feeds and supplements.
+- **Stats** tab: weekly/monthly charts of sleep vs. awake hours, feed
+  counts, and supplement counts.
 - **Lock**: signs out of the shared account on this device.
 
 ## Local development

@@ -30,16 +30,21 @@ export function StatsView({ entries }: { entries: Entry[] }) {
       let sleep = 0;
       let awake = 0;
       let feeds = 0;
+      let supplements = 0;
       for (const e of entries) {
         if (e.type === "sleep") sleep += overlapHours(e, dayStart);
         else if (e.type === "awake") awake += overlapHours(e, dayStart);
-        else if (e.startTime >= dayStart && e.startTime < dayStart + DAY_MS) feeds += 1;
+        else if (e.startTime >= dayStart && e.startTime < dayStart + DAY_MS) {
+          if (e.type === "feed") feeds += 1;
+          else if (e.type === "supplement") supplements += 1;
+        }
       }
       return {
         label: new Date(dayStart).toLocaleDateString(undefined, { weekday: "short", day: "numeric" }),
         sleep: Math.round(sleep * 10) / 10,
         awake: Math.round(awake * 10) / 10,
         feeds,
+        supplements,
       };
     });
   }, [entries, period]);
@@ -49,6 +54,7 @@ export function StatsView({ entries }: { entries: Entry[] }) {
       sleep: data.reduce((s, d) => s + d.sleep, 0),
       awake: data.reduce((s, d) => s + d.awake, 0),
       feeds: data.reduce((s, d) => s + d.feeds, 0),
+      supplements: data.reduce((s, d) => s + d.supplements, 0),
     }),
     [data],
   );
@@ -67,10 +73,11 @@ export function StatsView({ entries }: { entries: Entry[] }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         <Stat label="Sleep" value={`${totals.sleep.toFixed(1)}h`} color="text-indigo-300" />
         <Stat label="Awake" value={`${totals.awake.toFixed(1)}h`} color="text-amber-300" />
         <Stat label="Feeds" value={String(totals.feeds)} color="text-emerald-300" />
+        <Stat label="Supplements" value={String(totals.supplements)} color="text-red-300" />
       </div>
 
       <div>
@@ -99,6 +106,21 @@ export function StatsView({ entries }: { entries: Entry[] }) {
               <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
               <Bar dataKey="feeds" fill="#10b981" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-2 text-sm font-medium text-slate-400">Supplements per day</h3>
+        <div className="h-40 w-full">
+          <ResponsiveContainer>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+              <XAxis dataKey="label" stroke="#64748b" fontSize={11} interval={period === "month" ? 4 : 0} />
+              <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
+              <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
+              <Bar dataKey="supplements" fill="#ef4444" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

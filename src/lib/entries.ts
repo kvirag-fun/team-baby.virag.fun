@@ -24,6 +24,7 @@ function fromDoc(id: string, data: Record<string, unknown>): Entry {
     endTime: ts(data.endTime),
     feedType: (data.feedType as Entry["feedType"]) ?? null,
     sleepType: (data.sleepType as Entry["sleepType"]) ?? null,
+    supplementType: (data.supplementType as Entry["supplementType"]) ?? null,
     amount: (data.amount as number | undefined) ?? null,
     amountUnit: (data.amountUnit as Entry["amountUnit"]) ?? null,
     note: (data.note as string | undefined) ?? "",

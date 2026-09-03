@@ -7,13 +7,15 @@ import { fmtTime, startOfDay } from "@/lib/time";
 const DAY_MS = 86_400_000;
 const HOUR_LABELS = Array.from({ length: 25 }, (_, h) => h);
 
+const isPointType = (t: Entry["type"]) => t === "feed" || t === "supplement";
+
 function dayColumn(entries: Entry[], dayStart: number) {
   const dayEnd = dayStart + DAY_MS;
   const ranges = entries.filter(
-    (e) => e.type !== "feed" && e.startTime < dayEnd && (e.endTime ?? Date.now()) > dayStart,
+    (e) => !isPointType(e.type) && e.startTime < dayEnd && (e.endTime ?? Date.now()) > dayStart,
   );
-  const feeds = entries.filter((e) => e.type === "feed" && e.startTime >= dayStart && e.startTime < dayEnd);
-  return { ranges, feeds, dayStart, dayEnd };
+  const points = entries.filter((e) => isPointType(e.type) && e.startTime >= dayStart && e.startTime < dayEnd);
+  return { ranges, points, dayStart, dayEnd };
 }
 
 function Column({
@@ -46,7 +48,7 @@ function Column({
           </button>
         );
       })}
-      {data.feeds.map((e) => {
+      {data.points.map((e) => {
         const c = colorFor(e);
         return (
           <button
@@ -122,6 +124,8 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
         <Legend color="bg-amber-400" label="Awake" />
         <Legend color="bg-emerald-300" label="Formula" />
         <Legend color="bg-emerald-700" label="Breastmilk" />
+        <Legend color="bg-red-300" label="Vitamin D" />
+        <Legend color="bg-red-800" label="Iron" />
       </div>
     </div>
   );

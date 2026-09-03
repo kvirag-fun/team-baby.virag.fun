@@ -1,5 +1,5 @@
 import { createEntry, updateEntry } from "./entries";
-import type { Entry, FeedType, SleepType } from "./types";
+import type { Entry, FeedType, SleepType, SupplementType } from "./types";
 
 /**
  * The currently-running entry of a type, if any (endTime === null means
@@ -18,6 +18,7 @@ export async function stopEntry(entry: Entry, endTime = Date.now()) {
     endTime,
     feedType: entry.feedType,
     sleepType: entry.sleepType,
+    supplementType: entry.supplementType,
     amount: entry.amount,
     amountUnit: entry.amountUnit,
     note: entry.note,
@@ -35,6 +36,7 @@ export async function startSleep(entries: Entry[], sleepType: SleepType) {
     endTime: null,
     feedType: null,
     sleepType,
+    supplementType: null,
     amount: null,
     amountUnit: null,
     note: "",
@@ -52,6 +54,7 @@ export async function startAwake(entries: Entry[]) {
     endTime: null,
     feedType: null,
     sleepType: null,
+    supplementType: null,
     amount: null,
     amountUnit: null,
     note: "",
@@ -66,8 +69,24 @@ export async function logFeed(feedType: FeedType) {
     endTime: null,
     feedType,
     sleepType: null,
+    supplementType: null,
     amount: null,
     amountUnit: "ml",
+    note: "",
+  });
+}
+
+/** Supplement is a single moment, same as feed — endTime is always null/unused. */
+export async function logSupplement(supplementType: SupplementType) {
+  await createEntry({
+    type: "supplement",
+    startTime: Date.now(),
+    endTime: null,
+    feedType: null,
+    sleepType: null,
+    supplementType,
+    amount: null,
+    amountUnit: null,
     note: "",
   });
 }

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Moon, MoonStar, Sun, Milk } from "lucide-react";
+import { Moon, MoonStar, Sun, Milk, Pill } from "lucide-react";
 import type { Entry } from "@/lib/types";
 import { colorFor, labelFor } from "@/lib/colors";
 import { fmtDayHeading, fmtDuration, fmtTime, startOfDay } from "@/lib/time";
@@ -7,6 +7,7 @@ import { fmtDayHeading, fmtDuration, fmtTime, startOfDay } from "@/lib/time";
 function iconFor(entry: Entry) {
   if (entry.type === "sleep") return entry.sleepType === "overnight" ? MoonStar : Moon;
   if (entry.type === "awake") return Sun;
+  if (entry.type === "supplement") return Pill;
   return Milk;
 }
 
@@ -34,6 +35,7 @@ export function EntryList({ entries, onEdit }: { entries: Entry[]; onEdit: (e: E
             {dayEntries.map((entry) => {
               const c = colorFor(entry);
               const Icon = iconFor(entry);
+              const isPoint = entry.type === "feed" || entry.type === "supplement";
               return (
                 <li key={entry.id}>
                   <button
@@ -54,7 +56,7 @@ export function EntryList({ entries, onEdit }: { entries: Entry[]; onEdit: (e: E
                         )}
                       </span>
                       <span className="text-sm text-slate-400">
-                        {entry.type === "feed" ? (
+                        {isPoint ? (
                           fmtTime(entry.startTime)
                         ) : (
                           <>
@@ -64,7 +66,7 @@ export function EntryList({ entries, onEdit }: { entries: Entry[]; onEdit: (e: E
                         )}
                       </span>
                     </span>
-                    {entry.type !== "feed" && !entry.endTime && (
+                    {!isPoint && !entry.endTime && (
                       <span className="shrink-0 rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
                         ongoing
                       </span>

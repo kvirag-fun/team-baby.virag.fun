@@ -7,6 +7,7 @@ const PAGES: { type: EntryType; label: string; dot: string }[] = [
   { type: "sleep", label: "Sleep", dot: "bg-indigo-400" },
   { type: "awake", label: "Awake", dot: "bg-amber-400" },
   { type: "feed", label: "Feed", dot: "bg-emerald-400" },
+  { type: "supplement", label: "Supplements", dot: "bg-red-400" },
 ];
 
 const SWIPE_AXIS_THRESHOLD = 8;
@@ -21,7 +22,7 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
   const [page, setPage] = useState(0);
 
   const byType = useMemo(() => {
-    const map: Record<EntryType, Entry[]> = { sleep: [], awake: [], feed: [] };
+    const map: Record<EntryType, Entry[]> = { sleep: [], awake: [], feed: [], supplement: [] };
     for (const e of entries) map[e.type].push(e);
     return map;
   }, [entries]);

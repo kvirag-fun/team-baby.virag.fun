@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Loader2, Moon, MoonStar, Sun, Milk, type LucideIcon } from "lucide-react";
+import { Loader2, Moon, MoonStar, Sun, Milk, Pill, type LucideIcon } from "lucide-react";
 import type { Entry } from "@/lib/types";
-import { findOpenEntry, logFeed, startAwake, startSleep, stopEntry } from "@/lib/activity";
+import { findOpenEntry, logFeed, logSupplement, startAwake, startSleep, stopEntry } from "@/lib/activity";
 import { fmtDuration, fmtTime } from "@/lib/time";
 import { useTick } from "@/hooks/useTick";
 
@@ -33,12 +33,19 @@ function QuickButton({
   );
 }
 
-export function ActivityRibbon({ type, entries }: { type: "sleep" | "awake" | "feed"; entries: Entry[] }) {
+export function ActivityRibbon({
+  type,
+  entries,
+}: {
+  type: "sleep" | "awake" | "feed" | "supplement";
+  entries: Entry[];
+}) {
   useTick();
   const [busy, setBusy] = useState(false);
 
   if (type === "sleep") return <SleepRibbon entries={entries} busy={busy} setBusy={setBusy} />;
   if (type === "feed") return <FeedRibbon busy={busy} setBusy={setBusy} />;
+  if (type === "supplement") return <SupplementRibbon busy={busy} setBusy={setBusy} />;
 
   const open = findOpenEntry(entries, "awake");
 
@@ -174,6 +181,27 @@ function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
       <div className="grid grid-cols-2 gap-2">
         <QuickButton icon={Milk} label="Log Breastmilk" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk")} />
         <QuickButton icon={Milk} label="Log Formula" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => log("formula")} />
+      </div>
+    </div>
+  );
+}
+
+// Supplements are single moments too, same as feed — no start/end tracking.
+function SupplementRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) => void }) {
+  async function log(supplementType: "vitaminD" | "iron") {
+    setBusy(true);
+    try {
+      await logSupplement(supplementType);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
+      <div className="grid grid-cols-2 gap-2">
+        <QuickButton icon={Pill} label="Log Vitamin D" bg="bg-red-300" text="text-red-950" busy={busy} onClick={() => log("vitaminD")} />
+        <QuickButton icon={Pill} label="Log Iron" bg="bg-red-800" text="text-red-50" busy={busy} onClick={() => log("iron")} />
       </div>
     </div>
   );

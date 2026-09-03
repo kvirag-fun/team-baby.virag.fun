@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Moon, Sun, Milk, Trash2, X } from "lucide-react";
-import type { AmountUnit, Entry, EntryType, FeedType, NewEntry, SleepType } from "@/lib/types";
+import { Moon, Sun, Milk, Pill, Trash2, X } from "lucide-react";
+import type { AmountUnit, Entry, EntryType, FeedType, NewEntry, SleepType, SupplementType } from "@/lib/types";
 import { toInputValue, fromInputValue } from "@/lib/time";
 
 const TYPE_OPTIONS: { key: EntryType; label: string; icon: typeof Moon; active: string }[] = [
   { key: "sleep", label: "Sleep", icon: Moon, active: "bg-indigo-500 text-white" },
   { key: "awake", label: "Awake", icon: Sun, active: "bg-amber-400 text-amber-950" },
   { key: "feed", label: "Feed", icon: Milk, active: "bg-emerald-500 text-white" },
+  { key: "supplement", label: "Supplement", icon: Pill, active: "bg-red-500 text-white" },
 ];
+
+const POINT_TYPES: EntryType[] = ["feed", "supplement"];
 
 export function EntrySheet({
   initial,
@@ -26,6 +29,7 @@ export function EntrySheet({
   const [end, setEnd] = useState(toInputValue(initial?.endTime ?? Date.now()));
   const [feedType, setFeedType] = useState<FeedType>(initial?.feedType ?? "breastmilk");
   const [sleepType, setSleepType] = useState<SleepType>(initial?.sleepType ?? "nap");
+  const [supplementType, setSupplementType] = useState<SupplementType>(initial?.supplementType ?? "vitaminD");
   const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount) : "");
   const [unit, setUnit] = useState<AmountUnit>(initial?.amountUnit ?? "ml");
   const [note, setNote] = useState(initial?.note ?? "");
@@ -35,12 +39,14 @@ export function EntrySheet({
     setBusy(true);
     try {
       const startTime = fromInputValue(start);
+      const isPoint = POINT_TYPES.includes(type);
       const entry: NewEntry = {
         type,
         startTime,
-        endTime: type === "feed" ? null : ongoing ? null : fromInputValue(end),
+        endTime: isPoint ? null : ongoing ? null : fromInputValue(end),
         feedType: type === "feed" ? feedType : null,
         sleepType: type === "sleep" ? sleepType : null,
+        supplementType: type === "supplement" ? supplementType : null,
         amount: type === "feed" && amount !== "" ? Number(amount) : null,
         amountUnit: type === "feed" ? unit : null,
         note,
@@ -66,7 +72,7 @@ export function EntrySheet({
         </div>
 
         <div className="flex flex-col gap-4 p-4">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {TYPE_OPTIONS.map((opt) => (
               <button
                 key={opt.key}
@@ -82,7 +88,7 @@ export function EntrySheet({
           </div>
 
           <label className="flex flex-col gap-1 text-sm text-slate-400">
-            {type === "feed" ? "Time" : "Start"}
+            {POINT_TYPES.includes(type) ? "Time" : "Start"}
             <input
               type="datetime-local"
               value={start}
@@ -91,7 +97,7 @@ export function EntrySheet({
             />
           </label>
 
-          {type !== "feed" && (
+          {!POINT_TYPES.includes(type) && (
             <>
               <label className="flex items-center gap-2 text-sm text-slate-300">
                 <input
@@ -194,6 +200,31 @@ export function EntrySheet({
                 </div>
               </div>
             </>
+          )}
+
+          {type === "supplement" && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setSupplementType("vitaminD")}
+                className={`rounded-xl border py-2 text-sm font-medium ${
+                  supplementType === "vitaminD"
+                    ? "border-transparent bg-red-300 text-red-950"
+                    : "border-slate-700 text-slate-400"
+                }`}
+              >
+                Vitamin D
+              </button>
+              <button
+                onClick={() => setSupplementType("iron")}
+                className={`rounded-xl border py-2 text-sm font-medium ${
+                  supplementType === "iron"
+                    ? "border-transparent bg-red-800 text-red-50"
+                    : "border-slate-700 text-slate-400"
+                }`}
+              >
+                Iron
+              </button>
+            </div>
           )}
 
           <label className="flex flex-col gap-1 text-sm text-slate-400">

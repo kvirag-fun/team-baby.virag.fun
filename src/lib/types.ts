@@ -1,6 +1,7 @@
-export type EntryType = "sleep" | "awake" | "feed";
+export type EntryType = "sleep" | "awake" | "feed" | "supplement";
 export type FeedType = "formula" | "breastmilk";
 export type SleepType = "nap" | "overnight";
+export type SupplementType = "vitaminD" | "iron";
 export type AmountUnit = "ml" | "oz";
 
 export interface Entry {
@@ -12,6 +13,7 @@ export interface Entry {
   endTime: number | null;
   feedType: FeedType | null;
   sleepType: SleepType | null;
+  supplementType: SupplementType | null;
   amount: number | null;
   amountUnit: AmountUnit | null;
   note: string;
