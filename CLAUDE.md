@@ -97,47 +97,88 @@ fix in Firestore Console again:
   registration — iOS can rotate a device's push token on its own, and the
   old `touchLastSeen` only merge-wrote `lastSeen` without pruning, letting
   a rotated-away token silently orphan and keep receiving pushes.
-- Diagnostics proved the whole pipeline fires exactly once per log action
-  (client calls once, function invokes once, `sendEachForMulticast` returns
-  exactly one `messageId`), yet both phones still showed two banners per
-  message, and a full app reinstall changed nothing. **Don't re-litigate
-  the token/registration logic if duplicates come up again — it's provably
-  not the cause**, and neither is FCM/APNs redelivery (an earlier round
-  wrongly concluded that and shipped a `data.dedupeId` + Cache-API dedupe
-  in the service worker; it was reverted).
+- None of the above was ever the cause of the duplicate-notification bug —
+  that was the receiving service worker, not registration. See the next
+  section, and **don't re-litigate token/registration logic if duplicates
+  come up again**. The pruning here is still worth having (an orphaned
+  token really would get its own extra push), it just wasn't this.
 
-## The real cause of duplicate notifications: the SDK displays them too
+## Duplicate notifications — solved, confirmed on both phones
 
-`@firebase/messaging`'s own service-worker push listener
-(`sw-listeners.ts`, `onPush`) does both of these, in order:
+Every logged entry produced exactly **two** banners on the receiving phone.
+Deterministic, not intermittent. Both phones, identically. Survived a full
+delete-and-reinstall of the app. This one took many rounds; the record
+below is here so none of it gets repeated.
+
+### Ruled out, each with direct evidence — do not re-investigate
+
+| Suspected | How it was excluded |
+| --- | --- |
+| Several device docs / stale tokens per phone | `devices` confirmed to hold exactly one token per phone, and the bug persisted |
+| Client calling the function twice | Instrumented — exactly one call per log action |
+| Function invoked twice per call | Instrumented via a temporary `debug_invocations` collection — exactly one invocation |
+| FCM asked to send twice | `sendEachForMulticast` returned exactly one `messageId` per push |
+| A foreground `onMessage` handler also displaying | There is none anywhere in the client (checked) |
+| FCM/APNs "at least once" redelivery | An earlier round concluded this and shipped a `data.dedupeId` + Cache-API "already shown" check in the worker. **Wrong, and reverted.** Redelivery is intermittent by nature; this happened on every single push |
+
+Every layer we controlled measured as correct because the duplication
+happened *after* delivery, inside the receiving service worker — nowhere in
+the send path. That's why sender-side diagnostics could never see it.
+
+### The actual cause: the SDK displays the notification, *and then* calls your handler
+
+From `@firebase/messaging`'s own service-worker listener
+(`sw-listeners.ts`, `onPush`) — both branches run, they are not exclusive:
 
 ```ts
-if (!!internalPayload.notification) await showNotification(...);
-if (!!messaging.onBackgroundMessageHandler) await messaging.onBackgroundMessageHandler(payload);
+if (!!internalPayload.notification) {
+  await showNotification(wrapInternalPayload(internalPayload));
+}
+if (!!messaging.onBackgroundMessageHandler) {
+  await messaging.onBackgroundMessageHandler(externalizePayload(internalPayload));
+}
 ```
 
 So a message carrying a `notification` payload is displayed by the SDK
-**and** handed to any registered `onBackgroundMessage` handler. If that
-handler also calls `showNotification()` — the shape every tutorial shows —
-every push appears twice, deterministically, on every device. Fix used
-here: keep the `notification` payload (it's what makes the push
-high-priority and reliably delivered through APNs on iOS; a data-only
-message is not) and register **no** `onBackgroundMessage` handler at all,
-letting the SDK's auto-display be the single display path. Icon/badge then
-have to be set sender-side via the `webpush.notification` block in
-`functions/index.js`, since there's no handler to pass them locally.
-The opposite fix (data-only payload + handler that displays) also
-deduplicates, but risks iOS not delivering the push at all — don't switch
-to it without testing on a real iPhone.
+itself, and *then* handed to any registered `onBackgroundMessage` handler.
+Ours called `showNotification()` as well — the shape essentially every
+tutorial and StackOverflow answer shows — so every push was displayed
+twice, on every device, every time.
 
-The worker also calls `skipWaiting()`/`clients.claim()`, without which a
-changed worker installs but stays idle until every client running the old
-one closes — on an installed PWA, effectively never, so fixing the worker
-would have meant telling both phones to delete and re-add the app every
-time. Safe only because this worker caches no assets. Note this doesn't
-help the *first* time: the version already on a phone has to release
-control on its own, so the update introducing `skipWaiting` still needs a
-reinstall (or fully closing the app) to land.
+### The fix (`50141f6`)
+
+Register **no** `onBackgroundMessage` handler at all, and let the SDK's
+auto-display be the single display path. `public/firebase-messaging-sw.js`
+now calls `firebase.messaging()` to install the push listener and stops
+there. Presentation (icon, badge) has to move sender-side as a result —
+it's the `webpush.notification` block in `functions/index.js`, since
+there's no longer a handler to set it locally.
+
+**Why not the other fix.** Sending a data-only message (no `notification`
+key) and keeping a handler that displays also deduplicates, since the SDK's
+branch doesn't fire without a `notification` payload. Rejected: that
+payload is what makes the push high priority and reliably delivered through
+APNs, and data-only messages can be delayed or dropped outright on iOS.
+Don't switch to it without testing on a real iPhone.
+
+### Shipping a service-worker fix needs `skipWaiting` (`304f9ef`)
+
+A changed worker installs but sits in "waiting" until every client running
+the old one is gone — on an installed home-screen PWA, effectively never.
+Without this, a worker fix silently never takes effect and looks like the
+fix didn't work. The worker now calls `self.skipWaiting()` on install and
+`clients.claim()` on activate, so future worker changes take over as soon
+as the new file is fetched. Safe **only** because this worker caches no
+assets — there's no half-updated asset state an abrupt swap could land in.
+
+This does not help the update that *introduces* it: the old worker still
+has to release control on its own, which is why this fix needed one last
+delete-and-re-add of the app on both phones. That was the final one.
+
+### Status
+
+Confirmed working on both phones after that reinstall — one notification
+per logged entry.
 
 ## iOS PWA stale cache
 

@@ -24,7 +24,8 @@ firebase.initializeApp({
 // `notification` payload, and *then* also invokes a registered
 // onBackgroundMessage handler — so displaying it here too showed every push
 // twice. Presentation (icon, badge) is set sender-side in the webpush block
-// of functions/index.js instead.
+// of functions/index.js instead. Don't add a handler back to "fix" icons or
+// text — that reintroduces the duplicate; see CLAUDE.md for the full writeup.
 firebase.messaging();
 
 // By default a new worker installs but sits idle until every tab/window
