@@ -63,6 +63,49 @@ Safari/Chrome address bar, full-screen. Nothing to download from a store.
 - **Android**: open the site in Chrome → menu (⋮) → **Add to Home
   screen** / **Install app**.
 
+## Push notifications (optional)
+
+When on, each of you gets a push notification when the *other* device logs
+a new entry (the device that made the change never notifies itself). It's
+one shared on/off switch — the bell icon in the header — since you're both
+signed into the same account; the app title's setting section covers the
+setup this needs beyond what's above.
+
+This is the one part of the app that isn't purely static — sending a push
+safely requires a small backend that holds privileged credentials, which
+can't live in client-side JS. That backend is a Firebase **Cloud
+Function**, which needs the **Blaze** (pay-as-you-go) plan. For two people
+logging a few entries a day this stays entirely inside Blaze's free
+quota — realistically $0/month — but it does need a card on file as a
+safety net. See Firebase Console > bottom-left plan link > **Modify plan**
+> **Blaze**, then attach a billing account (Firebase will offer to set a
+budget alert email too, worth turning on).
+
+Once on Blaze:
+
+1. **Generate a Web Push key**: Firebase Console > gear icon ⚙️ > Project
+   settings > **Cloud Messaging** tab > **Web configuration** > **Web Push
+   certificates** > **Generate key pair**. Copy the key it shows.
+2. **Add it as a GitHub secret**: repo Settings > Secrets and variables >
+   Actions > New repository secret, name `FIREBASE_VAPID_KEY`, paste the
+   key.
+3. **Get a deploy token for the Cloud Function** — this one step needs a
+   terminal (a computer, not your phone):
+   ```sh
+   npm install -g firebase-tools
+   firebase login:ci
+   ```
+   This opens a browser to sign in, then prints a token in the terminal.
+   Add it as a GitHub secret named `FIREBASE_TOKEN`.
+4. Push to `main` (or re-run the **Deploy Cloud Functions** workflow) —
+   it deploys the function automatically, the same way the site itself
+   deploys.
+5. In the app, tap the bell icon in the header (top-right) on **each** of
+   your phones once — it asks for notification permission and registers
+   that device. The bell fills in red once both permission is granted on
+   that device and the shared switch is on; tapping a filled bell turns it
+   off for both of you.
+
 ## Using the app
 
 - Tap the baby's name in the header (next to the pencil icon) to rename it.

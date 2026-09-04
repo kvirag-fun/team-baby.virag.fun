@@ -19,5 +19,13 @@ service cloud.firestore {
     match /settings/{docId} {
       allow read, write: if isFamily();
     }
+
+    // Registered push tokens, one doc per device. Only the Cloud Function
+    // (running with admin privileges, bypassing these rules) reads across
+    // all of them to fan out a notification; clients only ever write their
+    // own device's doc.
+    match /devices/{token} {
+      allow read, write: if isFamily();
+    }
   }
 }

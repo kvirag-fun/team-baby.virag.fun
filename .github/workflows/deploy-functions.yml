@@ -1,0 +1,33 @@
+name: Deploy Cloud Functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "functions/**"
+      - "firebase.json"
+      - ".github/workflows/deploy-functions.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm --prefix functions ci
+
+      - name: Deploy
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: |
+          if [ -z "$FIREBASE_TOKEN" ] || [ -z "$FIREBASE_PROJECT_ID" ]; then
+            echo "::error::FIREBASE_TOKEN and/or FIREBASE_PROJECT_ID secret is missing — see README Setup (push notifications section) for how to generate a CI token with 'firebase login:ci'."
+            exit 1
+          fi
+          npx firebase-tools deploy --only functions --project "$FIREBASE_PROJECT_ID" --token "$FIREBASE_TOKEN" --non-interactive

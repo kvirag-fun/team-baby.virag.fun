@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { browserLocalPersistence, initializeAuth, indexedDBLocalPersistence } from "firebase/auth";
 import { initializeFirestore } from "firebase/firestore";
+import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
 
 // Not a secret: a Firebase web config only identifies the project. Real
 // access control is enforced server-side by Firestore Security Rules (see
@@ -25,3 +26,9 @@ export const auth = initializeAuth(app, {
   persistence: [indexedDBLocalPersistence, browserLocalPersistence],
 });
 export const db = initializeFirestore(app, {});
+
+// Not every browser supports FCM (e.g. no iOS Safari support outside an
+// installed PWA) — resolve to null rather than throwing on unsupported ones.
+export const messagingPromise: Promise<Messaging | null> = isSupported().then((ok) =>
+  ok ? getMessaging(app) : null,
+);

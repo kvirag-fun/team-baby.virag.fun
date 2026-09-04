@@ -11,6 +11,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
+import { getDeviceId } from "./device";
 import type { Entry, NewEntry } from "./types";
 
 const entriesCol = collection(db, "entries");
@@ -47,6 +48,9 @@ export async function createEntry(entry: NewEntry) {
     ...entry,
     startTime: Timestamp.fromMillis(entry.startTime),
     endTime: entry.endTime != null ? Timestamp.fromMillis(entry.endTime) : null,
+    // Which browser install made this write, so the notification Cloud
+    // Function can skip pushing back to the device that just logged it.
+    deviceId: getDeviceId(),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
