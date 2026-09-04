@@ -1,11 +1,21 @@
 import { useMemo, useState } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Entry } from "@/lib/types";
 import { startOfDay } from "@/lib/time";
 
 const DAY_MS = 86_400_000;
 
 type Period = "week" | "month";
+
+// Every chart stacks two sub-types of one activity in two shades of the same
+// hue, so a key is the only thing saying which shade is which.
+const LEGEND_PROPS = {
+  verticalAlign: "top" as const,
+  align: "right" as const,
+  height: 20,
+  iconSize: 8,
+  wrapperStyle: { fontSize: 11, color: "#94a3b8" },
+};
 
 function rangeStart(period: Period) {
   const today = startOfDay(Date.now());
@@ -29,17 +39,23 @@ export function StatsView({ entries }: { entries: Entry[] }) {
       const dayStart = from + i * DAY_MS;
       let sleep = 0;
       let awake = 0;
-      let feeds = 0;
-      let supplements = 0;
+      let breastmilk = 0;
+      let formula = 0;
+      let vitaminD = 0;
+      let iron = 0;
       let wet = 0;
       let poopy = 0;
       for (const e of entries) {
         if (e.type === "sleep") sleep += overlapHours(e, dayStart);
         else if (e.type === "awake") awake += overlapHours(e, dayStart);
         else if (e.startTime >= dayStart && e.startTime < dayStart + DAY_MS) {
-          if (e.type === "feed") feeds += 1;
-          else if (e.type === "supplement") supplements += 1;
-          else if (e.type === "diaper") {
+          if (e.type === "feed") {
+            if (e.feedType === "formula") formula += 1;
+            else breastmilk += 1;
+          } else if (e.type === "supplement") {
+            if (e.supplementType === "iron") iron += 1;
+            else vitaminD += 1;
+          } else if (e.type === "diaper") {
             if (e.diaperType === "poopy") poopy += 1;
             else wet += 1;
           }
@@ -49,24 +65,29 @@ export function StatsView({ entries }: { entries: Entry[] }) {
         label: new Date(dayStart).toLocaleDateString(undefined, { weekday: "short", day: "numeric" }),
         sleep: Math.round(sleep * 10) / 10,
         awake: Math.round(awake * 10) / 10,
-        feeds,
-        supplements,
+        breastmilk,
+        formula,
+        vitaminD,
+        iron,
         wet,
         poopy,
       };
     });
   }, [entries, period]);
 
-  const totals = useMemo(
-    () => ({
-      sleep: data.reduce((s, d) => s + d.sleep, 0),
-      awake: data.reduce((s, d) => s + d.awake, 0),
-      feeds: data.reduce((s, d) => s + d.feeds, 0),
-      supplements: data.reduce((s, d) => s + d.supplements, 0),
-      diapers: data.reduce((s, d) => s + d.wet + d.poopy, 0),
-    }),
-    [data],
-  );
+  const totals = useMemo(() => {
+    const sum = (key: keyof (typeof data)[number]) => data.reduce((s, d) => s + (d[key] as number), 0);
+    return {
+      sleep: sum("sleep"),
+      awake: sum("awake"),
+      breastmilk: sum("breastmilk"),
+      formula: sum("formula"),
+      vitaminD: sum("vitaminD"),
+      iron: sum("iron"),
+      wet: sum("wet"),
+      poopy: sum("poopy"),
+    };
+  }, [data]);
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-4">
@@ -82,14 +103,17 @@ export function StatsView({ entries }: { entries: Entry[] }) {
         ))}
       </div>
 
-      {/* Three across, not five: at a fifth of a phone's width "Supplements"
-          is a single word too long to fit or wrap, and gets clipped. */}
+      {/* Three across: a phone can't fit more without clipping the longer
+          single-word labels. */}
       <div className="grid grid-cols-3 gap-2">
         <Stat label="Sleep" value={`${totals.sleep.toFixed(1)}h`} color="text-indigo-300" />
         <Stat label="Awake" value={`${totals.awake.toFixed(1)}h`} color="text-amber-300" />
-        <Stat label="Feeds" value={String(totals.feeds)} color="text-emerald-300" />
-        <Stat label="Supplements" value={String(totals.supplements)} color="text-red-300" />
-        <Stat label="Diapers" value={String(totals.diapers)} color="text-sky-300" />
+        <Stat label="Breastmilk" value={String(totals.breastmilk)} color="text-emerald-500" />
+        <Stat label="Formula" value={String(totals.formula)} color="text-emerald-300" />
+        <Stat label="Vitamin D" value={String(totals.vitaminD)} color="text-red-300" />
+        <Stat label="Iron" value={String(totals.iron)} color="text-red-500" />
+        <Stat label="Wet" value={String(totals.wet)} color="text-sky-300" />
+        <Stat label="Poopy" value={String(totals.poopy)} color="text-amber-600" />
       </div>
 
       <div>
@@ -101,8 +125,9 @@ export function StatsView({ entries }: { entries: Entry[] }) {
               <XAxis dataKey="label" stroke="#64748b" fontSize={11} interval={period === "month" ? 4 : 0} />
               <YAxis stroke="#64748b" fontSize={11} width={28} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
-              <Bar dataKey="sleep" stackId="a" fill="#6366f1" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="awake" stackId="a" fill="#fbbf24" radius={[4, 4, 0, 0]} />
+              <Legend {...LEGEND_PROPS} />
+              <Bar dataKey="sleep" name="Sleep" stackId="a" fill="#6366f1" />
+              <Bar dataKey="awake" name="Awake" stackId="a" fill="#fbbf24" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -117,7 +142,9 @@ export function StatsView({ entries }: { entries: Entry[] }) {
               <XAxis dataKey="label" stroke="#64748b" fontSize={11} interval={period === "month" ? 4 : 0} />
               <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
-              <Bar dataKey="feeds" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Legend {...LEGEND_PROPS} />
+              <Bar dataKey="breastmilk" name="Breastmilk" stackId="f" fill="#047857" />
+              <Bar dataKey="formula" name="Formula" stackId="f" fill="#6ee7b7" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -132,7 +159,9 @@ export function StatsView({ entries }: { entries: Entry[] }) {
               <XAxis dataKey="label" stroke="#64748b" fontSize={11} interval={period === "month" ? 4 : 0} />
               <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
-              <Bar dataKey="supplements" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <Legend {...LEGEND_PROPS} />
+              <Bar dataKey="vitaminD" name="Vitamin D" stackId="s" fill="#fca5a5" />
+              <Bar dataKey="iron" name="Iron" stackId="s" fill="#991b1b" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -147,8 +176,9 @@ export function StatsView({ entries }: { entries: Entry[] }) {
               <XAxis dataKey="label" stroke="#64748b" fontSize={11} interval={period === "month" ? 4 : 0} />
               <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
-              <Bar dataKey="wet" stackId="d" fill="#7dd3fc" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="poopy" stackId="d" fill="#b45309" radius={[4, 4, 0, 0]} />
+              <Legend {...LEGEND_PROPS} />
+              <Bar dataKey="wet" name="Wet" stackId="d" fill="#7dd3fc" />
+              <Bar dataKey="poopy" name="Poopy" stackId="d" fill="#b45309" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
