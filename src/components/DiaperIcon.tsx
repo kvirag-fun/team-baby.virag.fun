@@ -12,14 +12,10 @@ import { createLucideIcon } from "lucide-react";
 // legible as a diaper, and both survive down to the 18px used in the log
 // list.
 //
-// The centre strip is the wetness indicator real diapers have: it runs the
-// full length from the waistband down, yellow when dry and turning blue from
-// the bottom as it gets wet — drawn here caught partway.
-// Those two are the only hardcoded colours in the app's iconography — every
-// other icon is monochrome and inherits its colour from the entry's own
-// palette. The strip has to keep its real colours to mean anything, so it
-// overrides `stroke` per path; it's drawn thicker than the outline so it
-// still reads as two tones at small sizes rather than a single dark dash.
+// The centre line is the wetness indicator strip real diapers have. It's
+// drawn in the same inherited stroke colour as the outline, like every other
+// icon in the app — it reads as part of the diaper rather than as its own
+// object, and it takes on the entry's palette instead of fighting it.
 export const Diaper = createLucideIcon("Diaper", [
   [
     "path",
@@ -28,6 +24,5 @@ export const Diaper = createLucideIcon("Diaper", [
       key: "diaper",
     },
   ],
-  ["path", { d: "M12 7.5v6", stroke: "#facc15", strokeWidth: "3", key: "indicator-dry" }],
-  ["path", { d: "M12 13.5v3", stroke: "#2563eb", strokeWidth: "3", key: "indicator-wet" }],
+  ["path", { d: "M12 8v8", key: "indicator" }],
 ]);
