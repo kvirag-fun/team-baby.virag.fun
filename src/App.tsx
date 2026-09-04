@@ -12,12 +12,12 @@ import { createEntry, deleteEntry, updateEntry } from "@/lib/entries";
 import type { Entry, NewEntry } from "@/lib/types";
 
 export default function App() {
-  const { user, loading, login, logout } = useAuth();
+  const { user, loading, login, resetPassword, logout } = useAuth();
   const [tab, setTab] = useState<Tab>("timeline");
   const [sheetEntry, setSheetEntry] = useState<Entry | "new" | null>(null);
 
   if (loading) return null;
-  if (!user) return <LoginScreen onLogin={login} />;
+  if (!user) return <LoginScreen onLogin={login} onResetPassword={resetPassword} />;
 
   return (
     <AppShell

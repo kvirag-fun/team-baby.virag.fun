@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User } from "firebase/auth";
-import { auth, SHARED_EMAIL } from "@/lib/firebase";
+import {
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signOut,
+  type User,
+} from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -11,13 +17,17 @@ export function useAuth() {
     setLoading(false);
   }), []);
 
-  async function login(password: string) {
-    await signInWithEmailAndPassword(auth, SHARED_EMAIL, password);
+  async function login(email: string, password: string) {
+    await signInWithEmailAndPassword(auth, email, password);
+  }
+
+  async function resetPassword(email: string) {
+    await sendPasswordResetEmail(auth, email);
   }
 
   async function logout() {
     await signOut(auth);
   }
 
-  return { user, loading, login, logout };
+  return { user, loading, login, resetPassword, logout };
 }

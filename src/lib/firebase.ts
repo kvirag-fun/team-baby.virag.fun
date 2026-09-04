@@ -6,9 +6,9 @@ import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
 
 // Not a secret: a Firebase web config only identifies the project. Real
 // access control is enforced server-side by Firestore Security Rules (see
-// firestore.rules), which restrict every read/write to the one shared
-// account below. Injected at build time from the FIREBASE_CONFIG secret so
-// the project identity itself isn't hardcoded into public git history.
+// firestore.rules), which restrict every read/write to the family's own
+// accounts. Injected at build time from the FIREBASE_CONFIG secret so the
+// project identity itself isn't hardcoded into public git history.
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -17,10 +17,6 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
-
-// The single shared account both of you sign into. Its password is the
-// "site password" — set it in the Firebase Console (Authentication > Users).
-export const SHARED_EMAIL = "timka@team.family";
 
 export const app = initializeApp(firebaseConfig);
 export const auth = initializeAuth(app, {
