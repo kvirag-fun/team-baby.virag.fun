@@ -97,10 +97,32 @@ Once on Blaze:
    ```
    This opens a browser to sign in, then prints a token in the terminal.
    Add it as a GitHub secret named `FIREBASE_TOKEN`.
-4. Push to `main` (or re-run the **Deploy Cloud Functions** workflow) —
+4. **Grant IAM roles needed for a first-time Cloud Function deploy.** On a
+   fresh project, Google's own service accounts for the Eventarc/Pub-Sub/
+   Cloud Build plumbing behind 2nd-gen functions don't have everything they
+   need yet, and a CI token can't grant this itself — so do it once, up
+   front, in [Cloud Console > IAM & Admin > IAM](https://console.cloud.google.com/iam-admin/iam)
+   (pick your project in the picker at the top if it doesn't load one
+   automatically). Find each principal below — search the filter box; if it
+   already appears in the list, click its pencil icon and **Add another
+   role** instead of using **Grant Access** (which is only for principals
+   not yet listed) — and give it the listed role(s). `PROJECT_NUMBER` is
+   shown next to your project name in the picker, or on the Firebase
+   Console's Project settings page.
+   | Principal | Role(s) |
+   | --- | --- |
+   | `service-PROJECT_NUMBER@gcp-sa-pubsub.iam.gserviceaccount.com` | Service Account Token Creator |
+   | `PROJECT_NUMBER-compute@developer.gserviceaccount.com` | Cloud Run Invoker, Eventarc Event Receiver, Cloud Build Service Account |
+
+   (These service accounts may not exist yet on a brand-new project — if a
+   search comes up empty, deploy once first; the first deploy attempt will
+   create them and print the exact `gcloud` commands to run, which fail
+   only because the CI token can't run them itself. Re-run the deploy after
+   granting the roles either way it's discovered.)
+5. Push to `main` (or re-run the **Deploy Cloud Functions** workflow) —
    it deploys the function automatically, the same way the site itself
    deploys.
-5. In the app, tap the bell icon in the header (top-right) on **each** of
+6. In the app, tap the bell icon in the header (top-right) on **each** of
    your phones once — it asks for notification permission and registers
    that device. The bell fills in red once both permission is granted on
    that device and the shared switch is on; tapping a filled bell turns it
