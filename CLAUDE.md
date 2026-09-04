@@ -30,7 +30,11 @@ Read this before touching auth, Firestore rules, or `functions/`.
    shared (`settings/app` in Firestore, both phones see one value), while
    the user's role — "Dad", "Mom", "Grandma", free text, sent along so a
    notification can say who logged it — is per browser install
-   (`localStorage`, `src/lib/role.ts`). Don't "fix" the role by moving it
+   (`localStorage`, `src/lib/role.ts`), alongside an emoji that stands in
+   for their face — iOS web push ignores a per-notification `icon` and
+   always shows the app's manifest icon
+   (https://developer.apple.com/forums/thread/740688), so a real photo
+   can't reach a notification, but text and emoji can. Don't "fix" the role by moving it
    into the shared settings doc: it describes whoever holds *that* phone,
    and both phones share one account, so a shared field would just have the
    two of them overwriting each other. The baby's photo is shared like the

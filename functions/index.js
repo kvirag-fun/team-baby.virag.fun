@@ -79,10 +79,20 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
   await Promise.all(abandoned.map((ref) => ref.delete()));
   if (tokens.length === 0) return { sent: 0 };
 
-  // Free text typed by whoever set up the sending phone ("Dad", "Grandma").
-  // Trimmed and capped rather than validated against a list — it's shown to
-  // the family, and only the family account can reach this function.
-  const role = typeof entry.role === "string" ? entry.role.trim().slice(0, 24) : "";
+  // Free text typed by whoever set up the sending phone: a role ("Dad",
+  // "Grandma") and an emoji standing in for their face. Trimmed and capped
+  // rather than validated — they're shown only to the family, and only the
+  // family account can reach this function.
+  //
+  // The emoji is here because iOS web push ignores a per-notification icon
+  // and always shows the app's own manifest icon, so an actual photo can't
+  // reach the notification. Text can, emoji included.
+  const text = (value, max) => (typeof value === "string" ? value.trim().slice(0, max) : "");
+  const role = text(entry.role, 24);
+  const emoji = text(entry.emoji, 12);
+  // Emoji alone leaves the line as just the emoji, which still reads as a
+  // signature; neither set leaves the notification a plain single line.
+  const signature = [emoji, role && `Logged by ${role}`].filter(Boolean).join(" ");
 
   const response = await messaging.sendEachForMulticast({
     tokens,
@@ -91,9 +101,7 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
     // repeating the app name as the title just duplicated it.
     notification: {
       title: describeEntry(entry),
-      // Only present when the sending phone has a role set, so an unset
-      // role means a plain one-line banner rather than an empty second line.
-      ...(role ? { body: `Logged by ${role}` } : {}),
+      ...(signature ? { body: signature } : {}),
     },
     // The service worker displays nothing itself (see the comment there), so
     // presentation has to come from the message — the SDK's own auto-display

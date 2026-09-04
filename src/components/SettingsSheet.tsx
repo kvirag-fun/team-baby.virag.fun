@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Baby, X } from "lucide-react";
 import { setAvatar, setBabyName } from "@/lib/settings";
 import { toAvatarDataUrl } from "@/lib/image";
-import { getRole, setRole, ROLE_MAX_LENGTH } from "@/lib/role";
+import { getEmoji, getRole, setEmoji, setRole, EMOJI_MAX_LENGTH, ROLE_MAX_LENGTH } from "@/lib/role";
 
 export function SettingsSheet({
   babyName,
@@ -15,6 +15,7 @@ export function SettingsSheet({
 }) {
   const [name, setName] = useState(babyName);
   const [role, setRoleDraft] = useState(getRole());
+  const [emoji, setEmojiDraft] = useState(getEmoji());
   // null means "untouched" — distinct from "" , which means the photo was
   // removed and the stored one needs clearing on save.
   const [avatarDraft, setAvatarDraft] = useState<string | null>(null);
@@ -41,6 +42,7 @@ export function SettingsSheet({
       // Role is local-only and can't fail; the name is a network write, so
       // only it needs the busy state.
       setRole(role);
+      setEmoji(emoji);
       if (avatarDraft !== null) await setAvatar(avatarDraft);
       await setBabyName(name || "Baby");
       onClose();
@@ -102,20 +104,33 @@ export function SettingsSheet({
             </div>
           </div>
 
-          <label className="flex flex-col gap-1 text-sm text-slate-400">
+          <div className="flex flex-col gap-1 text-sm text-slate-400">
             Your role
-            <input
-              value={role}
-              onChange={(e) => setRoleDraft(e.target.value)}
-              maxLength={ROLE_MAX_LENGTH}
-              placeholder="Dad, Mom, Grandma…"
-              className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-base text-white outline-none focus:border-indigo-400"
-            />
+            <div className="flex gap-2">
+              {/* The emoji stands in for a photo of you: iOS web push always
+                  shows the app's own icon and ignores a per-notification one,
+                  so a picture can't reach the notification — but text can. */}
+              <input
+                value={emoji}
+                onChange={(e) => setEmojiDraft(e.target.value)}
+                maxLength={EMOJI_MAX_LENGTH}
+                aria-label="Your emoji"
+                placeholder="🙂"
+                className="w-14 shrink-0 rounded-xl border border-slate-700 bg-slate-900 px-2 py-2 text-center text-base text-white outline-none focus:border-indigo-400"
+              />
+              <input
+                value={role}
+                onChange={(e) => setRoleDraft(e.target.value)}
+                maxLength={ROLE_MAX_LENGTH}
+                placeholder="Dad, Mom, Grandma…"
+                className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-base text-white outline-none focus:border-indigo-400"
+              />
+            </div>
             <span className="text-xs text-slate-500">
               Added to notifications so the other phone sees who logged it. Saved on this
               device only — each phone sets its own.
             </span>
-          </label>
+          </div>
 
           <button
             onClick={save}

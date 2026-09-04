@@ -13,7 +13,7 @@ import {
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "./firebase";
 import { getDeviceId } from "./device";
-import { getRole } from "./role";
+import { getEmoji, getRole } from "./role";
 import type { Entry, NewEntry } from "./types";
 
 const notifyOnNewEntry = httpsCallable(functions, "notifyOnNewEntry");
@@ -64,7 +64,7 @@ export async function createEntry(entry: NewEntry) {
   // Called directly rather than via a Firestore-triggered (Eventarc)
   // function — fire-and-forget, since a notification failure shouldn't
   // block or fail the entry that was just successfully logged.
-  notifyOnNewEntry({ ...entry, deviceId, role: getRole() }).catch((err) => {
+  notifyOnNewEntry({ ...entry, deviceId, role: getRole(), emoji: getEmoji() }).catch((err) => {
     console.error("notifyOnNewEntry call failed:", err);
   });
 }
