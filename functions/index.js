@@ -19,6 +19,9 @@ const messaging = getMessaging();
 
 const FAMILY_EMAIL = "timka@team.family";
 const REGION = "europe-central2";
+// Bumped on every deploy while debugging propagation — lets us confirm from
+// the client which revision actually answered a call.
+const CODE_VERSION = "diag-3";
 
 function describeEntry(entry) {
   const isRange = entry.type === "sleep" || entry.type === "awake";
@@ -55,14 +58,26 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
 
   const settingsSnap = await db.doc("settings/app").get();
   if (settingsSnap.data()?.notificationsEnabled !== true) {
-    return { sent: 0, reason: "notificationsEnabled is not true", notificationsEnabled: settingsSnap.data()?.notificationsEnabled ?? null };
+    return {
+      sent: 0,
+      version: CODE_VERSION,
+      reason: "notificationsEnabled is not true",
+      notificationsEnabled: settingsSnap.data()?.notificationsEnabled ?? null,
+    };
   }
 
   const devicesSnap = await db.collection("devices").get();
   const deviceIds = devicesSnap.docs.map((d) => d.data().deviceId);
   const tokens = devicesSnap.docs.filter((d) => d.data().deviceId !== entry.deviceId).map((d) => d.id);
   if (tokens.length === 0) {
-    return { sent: 0, reason: "no other registered devices", callerDeviceId: entry.deviceId, registeredDeviceIds: deviceIds, registeredCount: devicesSnap.size };
+    return {
+      sent: 0,
+      version: CODE_VERSION,
+      reason: "no other registered devices",
+      callerDeviceId: entry.deviceId,
+      registeredDeviceIds: deviceIds,
+      registeredCount: devicesSnap.size,
+    };
   }
 
   const response = await messaging.sendEachForMulticast({
@@ -81,5 +96,5 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
     });
   }
 
-  return { sent: response.successCount };
+  return { sent: response.successCount, version: CODE_VERSION };
 });
