@@ -9,14 +9,19 @@ import { createLucideIcon } from "lucide-react";
  * silhouettes tried first read as a ball or an eye at list size, and the ones
  * with the nipple bumped out of the outline came out looking bitten. */
 export const Breast = createLucideIcon("Breast", [
-  // Drawn 15% larger than the shape it started from, scaled about its own
-  // centre so it stays balanced in the 24x24 box — it sat visibly smaller
-  // than the bottle beside it otherwise.
+  // Sized to stand exactly as tall as the bottle (both 21.2 units in the
+  // 24x24 box, spanning y 1.3 to 22.5) so the two read as a matched pair in
+  // a row. Scaled from the original 15-unit-tall drawing about its own
+  // vertical axis, which widens it past the bottle — a teardrop is far
+  // squatter than a bottle, so equal height cannot also mean equal width.
   [
     "path",
-    { d: "M12 1.88c-1.15 4.6-6.9 5.75-6.9 10.35a6.9 6.9 0 0 0 13.8 0c0-4.6-5.75-5.75-6.9-10.35z", key: "breast" },
+    {
+      d: "M12 1.3c-1.41 5.65-8.48 7.07-8.48 12.72a8.48 8.48 0 0 0 16.96 0c0-5.65-7.07-7.07-8.48-12.72z",
+      key: "breast",
+    },
   ],
-  ["circle", { cx: "12", cy: "14.53", r: "1.84", key: "nipple" }],
+  ["circle", { cx: "12", cy: "16.85", r: "2.26", key: "nipple" }],
 ]);
 
 /** Formula. A baby bottle rather than a generic one: what makes it read as
