@@ -82,14 +82,10 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
     // own "from Team Baby" attribution line for web-push notifications, so
     // repeating the app name as the title just duplicated it.
     notification: { title: describeEntry(entry) },
-    // Push delivery is "at least once", not "exactly once" — FCM/APNs can
-    // redeliver a message even when we only asked to send it once (proven:
-    // one client call, one function invocation, one FCM send, one
-    // messageId back from Google — yet a receiving phone still showed two
-    // banners for it, even after a full app reinstall). A stable per-send
-    // id lets the receiving service worker deduplicate a redelivery of the
-    // same message instead of showing it twice.
-    data: { dedupeId: crypto.randomUUID() },
+    // The service worker displays nothing itself (see the comment there), so
+    // presentation has to come from the message — the SDK's own auto-display
+    // reads these.
+    webpush: { notification: { icon: "/icon-192.png", badge: "/icon-192.png" } },
   });
 
   const stale = response.responses

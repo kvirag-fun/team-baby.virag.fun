@@ -97,28 +97,38 @@ fix in Firestore Console again:
   registration — iOS can rotate a device's push token on its own, and the
   old `touchLastSeen` only merge-wrote `lastSeen` without pruning, letting
   a rotated-away token silently orphan and keep receiving pushes.
-- **Even after the devices collection was confirmed clean (exactly one
-  token per phone), diagnostics proved the whole pipeline fires exactly
-  once per log action** (client calls once, function invokes once, FCM
-  `sendEachForMulticast` returns exactly one `messageId`), and a full app
-  reinstall on the affected phone changed nothing, the receiving phone
-  still displayed two notification banners for one message. No foreground
-  `onMessage` handler exists anywhere in the client (checked), and the
-  service worker's `onBackgroundMessage` only calls `showNotification()`
-  once. **Don't re-litigate the token/registration logic if this comes up
-  again — it's provably not the cause.** Conclusion: push delivery is
-  "at least once", not "exactly once" — FCM/APNs is allowed to redeliver a
-  message even after reporting one successful send, and this has been
-  reported elsewhere as a real (if intermittent) characteristic of iOS
-  Safari web push specifically. Fixed the only way a sender-side guarantee
-  can be fixed — deduplicate on the receiving end: the function now sends
-  a unique `data.dedupeId` with every push
-  (`functions/index.js`/`crypto.randomUUID()`), and the service worker
-  (`public/firebase-messaging-sw.js`) remembers ids it's already shown
-  (via the Cache API, since a SW has no `localStorage`) and skips a
-  repeat. If duplicates ever recur after this, the sender side is still
-  provably fine — look at whether the dedupe cache itself is somehow
-  getting cleared, not at the token/send logic again.
+- Diagnostics proved the whole pipeline fires exactly once per log action
+  (client calls once, function invokes once, `sendEachForMulticast` returns
+  exactly one `messageId`), yet both phones still showed two banners per
+  message, and a full app reinstall changed nothing. **Don't re-litigate
+  the token/registration logic if duplicates come up again — it's provably
+  not the cause**, and neither is FCM/APNs redelivery (an earlier round
+  wrongly concluded that and shipped a `data.dedupeId` + Cache-API dedupe
+  in the service worker; it was reverted).
+
+## The real cause of duplicate notifications: the SDK displays them too
+
+`@firebase/messaging`'s own service-worker push listener
+(`sw-listeners.ts`, `onPush`) does both of these, in order:
+
+```ts
+if (!!internalPayload.notification) await showNotification(...);
+if (!!messaging.onBackgroundMessageHandler) await messaging.onBackgroundMessageHandler(payload);
+```
+
+So a message carrying a `notification` payload is displayed by the SDK
+**and** handed to any registered `onBackgroundMessage` handler. If that
+handler also calls `showNotification()` — the shape every tutorial shows —
+every push appears twice, deterministically, on every device. Fix used
+here: keep the `notification` payload (it's what makes the push
+high-priority and reliably delivered through APNs on iOS; a data-only
+message is not) and register **no** `onBackgroundMessage` handler at all,
+letting the SDK's auto-display be the single display path. Icon/badge then
+have to be set sender-side via the `webpush.notification` block in
+`functions/index.js`, since there's no handler to pass them locally.
+The opposite fix (data-only payload + handler that displays) also
+deduplicates, but risks iOS not delivering the push at all — don't switch
+to it without testing on a real iPhone.
 
 ## iOS PWA stale cache
 
