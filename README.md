@@ -112,13 +112,18 @@ Once on Blaze:
    | Principal | Role(s) |
    | --- | --- |
    | `service-PROJECT_NUMBER@gcp-sa-pubsub.iam.gserviceaccount.com` | Service Account Token Creator |
-   | `PROJECT_NUMBER-compute@developer.gserviceaccount.com` | Cloud Run Invoker, Eventarc Event Receiver, Cloud Build Service Account |
+   | `PROJECT_NUMBER-compute@developer.gserviceaccount.com` | Cloud Run Invoker, Eventarc Event Receiver, Cloud Build Service Account, Cloud Datastore User |
 
    (These service accounts may not exist yet on a brand-new project — if a
    search comes up empty, deploy once first; the first deploy attempt will
    create them and print the exact `gcloud` commands to run, which fail
    only because the CI token can't run them itself. Re-run the deploy after
-   granting the roles either way it's discovered.)
+   granting the roles either way it's discovered. Cloud Datastore User is
+   different from the other three — the deploy itself will succeed without
+   it, but the function will crash every time it runs with a Firestore
+   `PERMISSION_DENIED`, since that's what lets its own code read/write
+   Firestore at runtime, as opposed to the other three roles which are
+   about deploying it in the first place.)
 5. Push to `main` (or re-run the **Deploy Cloud Functions** workflow) —
    it deploys the function automatically, the same way the site itself
    deploys.
