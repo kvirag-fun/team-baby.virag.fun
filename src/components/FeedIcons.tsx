@@ -9,8 +9,14 @@ import { createLucideIcon } from "lucide-react";
  * silhouettes tried first read as a ball or an eye at list size, and the ones
  * with the nipple bumped out of the outline came out looking bitten. */
 export const Breast = createLucideIcon("Breast", [
-  ["path", { d: "M12 3c-1 4-6 5-6 9a6 6 0 0 0 12 0c0-4-5-5-6-9z", key: "breast" }],
-  ["circle", { cx: "12", cy: "14", r: "1.6", key: "nipple" }],
+  // Drawn 15% larger than the shape it started from, scaled about its own
+  // centre so it stays balanced in the 24x24 box — it sat visibly smaller
+  // than the bottle beside it otherwise.
+  [
+    "path",
+    { d: "M12 1.88c-1.15 4.6-6.9 5.75-6.9 10.35a6.9 6.9 0 0 0 13.8 0c0-4.6-5.75-5.75-6.9-10.35z", key: "breast" },
+  ],
+  ["circle", { cx: "12", cy: "14.53", r: "1.84", key: "nipple" }],
 ]);
 
 /** Formula. A baby bottle rather than a generic one: what makes it read as
