@@ -57,5 +57,15 @@ export async function registerThisDevice(): Promise<boolean> {
     createdAt: serverTimestamp(),
     lastSeen: serverTimestamp(),
   });
+
+  // Temporary — the duplicate-notification bug persisted after this same
+  // fix, so show every registered device doc directly to see what's
+  // actually stored (likely a stale doc under a different deviceId, e.g.
+  // from a reinstall that reset localStorage).
+  const all = await getDocs(collection(db, "devices"));
+  alert(
+    `This device: ${deviceId.slice(0, 8)}… / token ${token.slice(0, 8)}…\nAll registered:\n` +
+      all.docs.map((d) => `- ${d.id.slice(0, 8)}… deviceId=${(d.data().deviceId ?? "?").slice(0, 8)}…`).join("\n"),
+  );
   return true;
 }
