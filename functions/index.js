@@ -21,7 +21,7 @@ const FAMILY_EMAIL = "timka@team.family";
 const REGION = "europe-central2";
 // Bumped on every deploy while debugging propagation — lets us confirm from
 // the client which revision actually answered a call.
-const CODE_VERSION = "diag-3";
+const CODE_VERSION = "diag-4";
 
 function describeEntry(entry) {
   const isRange = entry.type === "sleep" || entry.type === "awake";
@@ -90,11 +90,12 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
     .filter(Boolean);
   await Promise.all(stale.map((t) => db.collection("devices").doc(t).delete()));
 
-  if (response.failureCount > 0) {
-    logger.warn(`${response.failureCount} of ${tokens.length} pushes failed`, {
-      errors: response.responses.filter((r) => !r.success).map((r) => r.error?.message),
-    });
+  const errors = response.responses
+    .map((r, i) => (r.success ? null : { token: tokens[i].slice(0, 12) + "…", code: r.error?.code, message: r.error?.message }))
+    .filter(Boolean);
+  if (errors.length > 0) {
+    logger.warn(`${errors.length} of ${tokens.length} pushes failed`, { errors });
   }
 
-  return { sent: response.successCount, version: CODE_VERSION };
+  return { sent: response.successCount, attempted: tokens.length, version: CODE_VERSION, errors };
 });
