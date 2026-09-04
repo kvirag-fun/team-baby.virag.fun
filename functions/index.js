@@ -59,8 +59,17 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
     throw new HttpsError("invalid-argument", "Missing entry data.");
   }
 
+  // Temporary — duplicate notifications persisted through every client-side
+  // fix and the devices collection is now confirmed clean (exactly one
+  // token per phone), so log each invocation to see whether the function
+  // itself is somehow being invoked twice per single client call.
+  const invocationsRef = db.collection("debug_invocations");
+  await invocationsRef.add({ at: Date.now(), entryType: entry.type, callerDeviceId: entry.deviceId });
+  const tenSecAgo = Date.now() - 10_000;
+  const recentInvocations = await invocationsRef.where("at", ">", tenSecAgo).get();
+
   const settingsSnap = await db.doc("settings/app").get();
-  if (settingsSnap.data()?.notificationsEnabled !== true) return { sent: 0 };
+  if (settingsSnap.data()?.notificationsEnabled !== true) return { sent: 0, invocationsInLast10s: recentInvocations.size };
 
   const devicesSnap = await db.collection("devices").get();
   const now = Date.now();
@@ -95,5 +104,10 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
     });
   }
 
-  return { sent: response.successCount };
+  return {
+    sent: response.successCount,
+    attempted: tokens.length,
+    invocationsInLast10s: recentInvocations.size,
+    messageIds: response.responses.map((r) => (r.success ? r.messageId : `error:${r.error?.code}`)),
+  };
 });
