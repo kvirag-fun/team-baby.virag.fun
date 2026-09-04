@@ -64,30 +64,6 @@ export function SettingsSheet({
         </div>
 
         <div className="flex flex-col gap-4 p-4">
-          <div className="flex items-center gap-4">
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-900 ring-1 ring-slate-700">
-              {shownAvatar ? (
-                <img src={shownAvatar} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <Baby className="h-7 w-7 text-slate-600" />
-              )}
-            </span>
-            <div className="flex flex-col items-start gap-1">
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300"
-              >
-                {shownAvatar ? "Change photo" : "Add photo"}
-              </button>
-              {shownAvatar && (
-                <button onClick={() => setAvatarDraft("")} className="px-1 text-sm text-slate-500">
-                  Remove
-                </button>
-              )}
-            </div>
-            <input ref={fileRef} type="file" accept="image/*" onChange={pickPhoto} className="hidden" />
-          </div>
-
           <label className="flex flex-col gap-1 text-sm text-slate-400">
             Baby's name
             <input
@@ -98,6 +74,33 @@ export function SettingsSheet({
               className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-base text-white outline-none focus:border-indigo-400"
             />
           </label>
+
+          <div className="flex flex-col gap-2 text-sm text-slate-400">
+            Baby's avatar
+            <div className="flex items-center gap-4">
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-900 ring-1 ring-slate-700">
+                {shownAvatar ? (
+                  <img src={shownAvatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <Baby className="h-7 w-7 text-slate-600" />
+                )}
+              </span>
+              <div className="flex flex-col items-start gap-1">
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300"
+                >
+                  {shownAvatar ? "Change photo" : "Add photo"}
+                </button>
+                {shownAvatar && (
+                  <button onClick={() => setAvatarDraft("")} className="px-1 text-sm text-slate-500">
+                    Remove
+                  </button>
+                )}
+              </div>
+              <input ref={fileRef} type="file" accept="image/*" onChange={pickPhoto} className="hidden" />
+            </div>
+          </div>
 
           <label className="flex flex-col gap-1 text-sm text-slate-400">
             Your role
