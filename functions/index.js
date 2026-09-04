@@ -78,7 +78,10 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
 
   const response = await messaging.sendEachForMulticast({
     tokens,
-    notification: { title: "Team Baby", body: describeEntry(entry) },
+    // Title is the actual message, not "Team Baby" — iOS already shows its
+    // own "from Team Baby" attribution line for web-push notifications, so
+    // repeating the app name as the title just duplicated it.
+    notification: { title: describeEntry(entry) },
   });
 
   const stale = response.responses
