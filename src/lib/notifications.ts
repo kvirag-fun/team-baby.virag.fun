@@ -23,6 +23,24 @@ export function hasDevicePermission() {
   return typeof Notification !== "undefined" && Notification.permission === "granted";
 }
 
+/** Writes this device's current token, always pruning any other token doc
+ * sharing the same deviceId first. iOS can rotate a device's push token on
+ * its own between explicit registrations (not just on reinstall) — if that
+ * rotation is only handled at bell-toggle time, the orphaned old token stays
+ * "fresh" (still getting its lastSeen touched under the old code) and keeps
+ * receiving duplicate pushes indefinitely instead of ever aging out. */
+async function upsertDeviceToken(token: string, deviceId: string): Promise<void> {
+  const priorTokens = await getDocs(query(collection(db, "devices"), where("deviceId", "==", deviceId)));
+  await Promise.all(priorTokens.docs.filter((d) => d.id !== token).map((d) => deleteDoc(d.ref)));
+
+  const existing = priorTokens.docs.find((d) => d.id === token);
+  await setDoc(doc(db, "devices", token), {
+    deviceId,
+    createdAt: existing?.data().createdAt ?? serverTimestamp(),
+    lastSeen: serverTimestamp(),
+  });
+}
+
 /** Requests permission (if needed) and registers this device's push token.
  * Returns false if permission was denied or push isn't supported here. */
 export async function registerThisDevice(): Promise<boolean> {
@@ -44,29 +62,19 @@ export async function registerThisDevice(): Promise<boolean> {
   const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
   if (!token) throw new Error("Firebase didn't return a push token");
 
-  const deviceId = getDeviceId();
-
-  // Remove any older tokens this same browser install registered before
-  // (e.g. from reinstalling the PWA) — otherwise both the old and new
-  // token stay valid and this one device gets every push twice.
-  const priorTokens = await getDocs(query(collection(db, "devices"), where("deviceId", "==", deviceId)));
-  await Promise.all(priorTokens.docs.filter((d) => d.id !== token).map((d) => deleteDoc(d.ref)));
-
-  await setDoc(doc(db, "devices", token), {
-    deviceId,
-    createdAt: serverTimestamp(),
-    lastSeen: serverTimestamp(),
-  });
+  await upsertDeviceToken(token, getDeviceId());
   return true;
 }
 
-/** Refreshes this device's lastSeen so it doesn't look abandoned. Call this
- * on every app load while notifications are already on — an install that's
- * actually in use stays "fresh" forever, while one orphaned by a reinstall
- * (its old token/deviceId can no longer be reached to delete directly, since
- * that browser storage is gone) stops getting touched and ages out on its
- * own via the pruning in notifyOnNewEntry, instead of needing anyone to find
- * and delete it by hand in the Firebase console. */
+/** Refreshes this device's token/lastSeen so it doesn't look abandoned, and
+ * catches a token rotation (see upsertDeviceToken) before it can cause a
+ * duplicate. Call this on every app load while notifications are already
+ * on — an install that's actually in use stays "fresh" forever, while one
+ * truly orphaned by a reinstall (its old token/deviceId can no longer be
+ * reached to delete directly, since that browser storage is gone) stops
+ * getting touched and ages out on its own via the pruning in
+ * notifyOnNewEntry, instead of needing anyone to find and delete it by hand
+ * in the Firebase console. */
 export async function touchLastSeen(): Promise<void> {
   if (!hasDevicePermission() || !VAPID_KEY) return;
   try {
@@ -77,7 +85,7 @@ export async function touchLastSeen(): Promise<void> {
     );
     const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
     if (!token) return;
-    await setDoc(doc(db, "devices", token), { lastSeen: serverTimestamp() }, { merge: true });
+    await upsertDeviceToken(token, getDeviceId());
   } catch (err) {
     console.error("touchLastSeen failed:", err);
   }
