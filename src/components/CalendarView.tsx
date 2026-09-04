@@ -26,6 +26,17 @@ function daysFor(anchor: number, mode: "day" | "week") {
   return Array.from({ length: 7 }, (_, i) => weekStart + i * DAY_MS);
 }
 
+// Point entries are single marks on the grid, so shape carries as much as
+// colour does at this size: circle for a feed, square for a supplement,
+// diamond for a diaper. The diamond is a rotated square set slightly smaller,
+// since rotating one to 45° grows its silhouette by its diagonal and it would
+// otherwise sit noticeably larger than the other two.
+const POINT_SHAPE: Partial<Record<Entry["type"], string>> = {
+  feed: "h-2.5 w-2.5 rounded-full",
+  supplement: "h-2.5 w-2.5 rounded-[2px]",
+  diaper: "h-2 w-2 rotate-45",
+};
+
 function dayColumn(entries: Entry[], dayStart: number) {
   const dayEnd = dayStart + DAY_MS;
   const ranges = entries.filter(
@@ -71,7 +82,7 @@ function Column({
           <button
             key={e.id}
             onClick={() => onEdit(e)}
-            className={`absolute left-1/2 h-2.5 w-2.5 -translate-x-1/2 rounded-full ${c.bg} ring-2 ring-slate-950`}
+            className={`absolute left-1/2 -translate-x-1/2 ${POINT_SHAPE[e.type]} ${c.bg} ring-2 ring-slate-950`}
             style={{ top: `${pct(e.startTime)}%` }}
             title={`${labelFor(e)} ${fmtTime(e.startTime)}`}
           />
@@ -267,19 +278,22 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
         <Legend color="bg-amber-400" label="Awake" />
         <Legend color="bg-emerald-300" label="Formula" />
         <Legend color="bg-emerald-700" label="Breastmilk" />
-        <Legend color="bg-red-300" label="Vitamin D" />
-        <Legend color="bg-red-800" label="Iron" />
-        <Legend color="bg-sky-300" label="Wet" />
-        <Legend color="bg-amber-700" label="Poopy" />
+        <Legend color="bg-red-300" label="Vitamin D" type="supplement" />
+        <Legend color="bg-red-800" label="Iron" type="supplement" />
+        <Legend color="bg-sky-300" label="Wet" type="diaper" />
+        <Legend color="bg-amber-700" label="Poopy" type="diaper" />
       </div>
     </div>
   );
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
+// `type` mirrors the mark's shape on the grid, so the legend is what makes
+// square and diamond readable rather than just decorative. Range types have
+// no point-shape and fall back to the plain dot.
+function Legend({ color, label, type }: { color: string; label: string; type?: Entry["type"] }) {
   return (
     <span className="flex items-center gap-1.5">
-      <span className={`h-2.5 w-2.5 rounded-full ${color}`} />
+      <span className={`${(type && POINT_SHAPE[type]) ?? "h-2.5 w-2.5 rounded-full"} shrink-0 ${color}`} />
       {label}
     </span>
   );
