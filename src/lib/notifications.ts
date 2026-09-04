@@ -42,7 +42,7 @@ export async function registerThisDevice(): Promise<boolean> {
     `/firebase-messaging-sw.js?${firebaseConfigQuery()}`,
   );
   const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
-  if (!token) return false;
+  if (!token) throw new Error("Firebase didn't return a push token");
 
   await setDoc(doc(db, "devices", token), {
     deviceId: getDeviceId(),

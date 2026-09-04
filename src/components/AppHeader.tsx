@@ -65,7 +65,10 @@ function NotificationsToggle() {
       } else {
         const ok = await registerThisDevice();
         if (ok) await setNotificationsEnabled(true);
+        else alert("Couldn't turn on notifications — check Settings > Notifications for this app, and that you have a network connection.");
       }
+    } catch (err) {
+      alert(`Notifications setup failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setBusy(false);
     }
