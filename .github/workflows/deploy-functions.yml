@@ -21,6 +21,14 @@ jobs:
 
       - run: npm --prefix functions ci
 
+      - name: Delete stale function (one-off cleanup)
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: |
+          npx firebase-tools functions:delete notifyOnNewEntry --region europe-central2 \
+            --project "$FIREBASE_PROJECT_ID" --token "$FIREBASE_TOKEN" --force || true
+
       - name: Deploy
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
