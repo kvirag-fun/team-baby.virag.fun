@@ -97,33 +97,29 @@ Once on Blaze:
    ```
    This opens a browser to sign in, then prints a token in the terminal.
    Add it as a GitHub secret named `FIREBASE_TOKEN`.
-4. **Grant IAM roles needed for a first-time Cloud Function deploy.** On a
-   fresh project, Google's own service accounts for the Eventarc/Pub-Sub/
-   Cloud Build plumbing behind 2nd-gen functions don't have everything they
-   need yet, and a CI token can't grant this itself — so do it once, up
-   front, in [Cloud Console > IAM & Admin > IAM](https://console.cloud.google.com/iam-admin/iam)
+4. **Grant IAM roles the function's runtime service account needs.** The
+   Cloud Function is an HTTPS callable — the app calls it directly right
+   after saving an entry, rather than it being triggered off the Firestore
+   write, so there's no Eventarc/Pub-Sub plumbing involved at all. But its
+   runtime identity (the project's default compute service account) still
+   doesn't come with everything it needs on a fresh project, and a CI token
+   can't grant this itself — so do it once, up front, in
+   [Cloud Console > IAM & Admin > IAM](https://console.cloud.google.com/iam-admin/iam)
    (pick your project in the picker at the top if it doesn't load one
-   automatically). Find each principal below — search the filter box; if it
-   already appears in the list, click its pencil icon and **Add another
-   role** instead of using **Grant Access** (which is only for principals
-   not yet listed) — and give it the listed role(s). `PROJECT_NUMBER` is
-   shown next to your project name in the picker, or on the Firebase
-   Console's Project settings page.
-   | Principal | Role(s) |
-   | --- | --- |
-   | `service-PROJECT_NUMBER@gcp-sa-pubsub.iam.gserviceaccount.com` | Service Account Token Creator |
-   | `PROJECT_NUMBER-compute@developer.gserviceaccount.com` | Cloud Run Invoker, Eventarc Event Receiver, Cloud Build Service Account, Cloud Datastore User |
+   automatically). Search the filter box for `PROJECT_NUMBER-compute@developer.gserviceaccount.com`
+   (`PROJECT_NUMBER` is shown next to your project name in the picker, or
+   on the Firebase Console's Project settings page) — if it's already
+   listed, click its pencil icon and **Add another role** instead of using
+   **Grant Access** (which is only for principals not yet listed) — and
+   give it all three of:
+   - **Cloud Build Service Account** — needed to build the function at all; without it, deploy fails outright.
+   - **Cloud Datastore User** — lets the function's own code read/write Firestore at runtime; without it, every invocation crashes with `PERMISSION_DENIED`.
+   - **Firebase Cloud Messaging API Admin** — lets it actually send pushes; without it, it runs fine and reports success but every push silently fails with a `messaging/mismatched-credential` error.
 
-   (These service accounts may not exist yet on a brand-new project — if a
+   (This service account may not exist yet on a brand-new project — if the
    search comes up empty, deploy once first; the first deploy attempt will
-   create them and print the exact `gcloud` commands to run, which fail
-   only because the CI token can't run them itself. Re-run the deploy after
-   granting the roles either way it's discovered. Cloud Datastore User is
-   different from the other three — the deploy itself will succeed without
-   it, but the function will crash every time it runs with a Firestore
-   `PERMISSION_DENIED`, since that's what lets its own code read/write
-   Firestore at runtime, as opposed to the other three roles which are
-   about deploying it in the first place.)
+   create it. Re-run the deploy after granting the roles either way it's
+   discovered.)
 5. Push to `main` (or re-run the **Deploy Cloud Functions** workflow) —
    it deploys the function automatically, the same way the site itself
    deploys.

@@ -19,9 +19,6 @@ const messaging = getMessaging();
 
 const FAMILY_EMAIL = "timka@team.family";
 const REGION = "europe-central2";
-// Bumped on every deploy while debugging propagation — lets us confirm from
-// the client which revision actually answered a call.
-const CODE_VERSION = "diag-4";
 
 function describeEntry(entry) {
   const isRange = entry.type === "sleep" || entry.type === "awake";
@@ -57,28 +54,11 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
   }
 
   const settingsSnap = await db.doc("settings/app").get();
-  if (settingsSnap.data()?.notificationsEnabled !== true) {
-    return {
-      sent: 0,
-      version: CODE_VERSION,
-      reason: "notificationsEnabled is not true",
-      notificationsEnabled: settingsSnap.data()?.notificationsEnabled ?? null,
-    };
-  }
+  if (settingsSnap.data()?.notificationsEnabled !== true) return { sent: 0 };
 
   const devicesSnap = await db.collection("devices").get();
-  const deviceIds = devicesSnap.docs.map((d) => d.data().deviceId);
   const tokens = devicesSnap.docs.filter((d) => d.data().deviceId !== entry.deviceId).map((d) => d.id);
-  if (tokens.length === 0) {
-    return {
-      sent: 0,
-      version: CODE_VERSION,
-      reason: "no other registered devices",
-      callerDeviceId: entry.deviceId,
-      registeredDeviceIds: deviceIds,
-      registeredCount: devicesSnap.size,
-    };
-  }
+  if (tokens.length === 0) return { sent: 0 };
 
   const response = await messaging.sendEachForMulticast({
     tokens,
@@ -90,12 +70,11 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
     .filter(Boolean);
   await Promise.all(stale.map((t) => db.collection("devices").doc(t).delete()));
 
-  const errors = response.responses
-    .map((r, i) => (r.success ? null : { token: tokens[i].slice(0, 12) + "…", code: r.error?.code, message: r.error?.message }))
-    .filter(Boolean);
-  if (errors.length > 0) {
-    logger.warn(`${errors.length} of ${tokens.length} pushes failed`, { errors });
+  if (response.failureCount > 0) {
+    logger.warn(`${response.failureCount} of ${tokens.length} pushes failed`, {
+      errors: response.responses.filter((r) => !r.success).map((r) => r.error?.message),
+    });
   }
 
-  return { sent: response.successCount, attempted: tokens.length, version: CODE_VERSION, errors };
+  return { sent: response.successCount };
 });

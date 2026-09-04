@@ -62,16 +62,9 @@ export async function createEntry(entry: NewEntry) {
   // Called directly rather than via a Firestore-triggered (Eventarc)
   // function — fire-and-forget, since a notification failure shouldn't
   // block or fail the entry that was just successfully logged.
-  notifyOnNewEntry({ ...entry, deviceId })
-    .then((res) => {
-      // Temporary — visible confirmation while debugging why no push
-      // arrives, since there's no way to read a phone's console remotely.
-      alert(`notifyOnNewEntry ok: ${JSON.stringify(res.data)}`);
-    })
-    .catch((err) => {
-      alert(`notifyOnNewEntry failed: ${err instanceof Error ? err.message : String(err)}`);
-      console.error("notifyOnNewEntry call failed:", err);
-    });
+  notifyOnNewEntry({ ...entry, deviceId }).catch((err) => {
+    console.error("notifyOnNewEntry call failed:", err);
+  });
 }
 
 export async function updateEntry(id: string, entry: NewEntry) {
