@@ -21,7 +21,24 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
+// Push delivery is "at least once", not "exactly once" — FCM/APNs can
+// redeliver the same message even after reporting a single successful send
+// (confirmed independently: the backend sends exactly once per log action,
+// yet a real device still showed the notification twice, even surviving a
+// full app reinstall). Each send carries a unique dedupeId (data.dedupeId);
+// remember which ones this device has already shown and skip a repeat.
+// Uses the Cache API rather than IndexedDB purely for its simpler API — this
+// isn't caching network responses, just a small persistent set of seen ids.
+async function alreadyShown(dedupeId) {
+  if (!dedupeId) return false;
+  const cache = await caches.open("shown-notification-ids");
+  if (await cache.match(dedupeId)) return true;
+  await cache.put(dedupeId, new Response(""));
+  return false;
+}
+
+messaging.onBackgroundMessage(async (payload) => {
+  if (await alreadyShown(payload.data?.dedupeId)) return;
   const { title, body } = payload.notification || {};
   self.registration.showNotification(title || "Team Baby", {
     body: body || "",

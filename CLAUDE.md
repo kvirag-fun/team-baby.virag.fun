@@ -98,19 +98,27 @@ fix in Firestore Console again:
   old `touchLastSeen` only merge-wrote `lastSeen` without pruning, letting
   a rotated-away token silently orphan and keep receiving pushes.
 - **Even after the devices collection was confirmed clean (exactly one
-  token per phone) and diagnostics proved the whole pipeline fires exactly
+  token per phone), diagnostics proved the whole pipeline fires exactly
   once per log action** (client calls once, function invokes once, FCM
-  `sendEachForMulticast` returns exactly one `messageId`), the receiving
-  phone still displayed two notification banners for that one message. No
-  foreground `onMessage` handler exists anywhere in the client (checked),
-  and the service worker's `onBackgroundMessage` only calls
-  `showNotification()` once. This means the duplication — if it recurs —
-  is happening at the OS/browser push-delivery or notification-rendering
-  layer, outside anything JavaScript here can control. Don't re-litigate
-  the token/registration logic if this comes up again; it's provably not
-  the cause. Worth checking instead: iOS version quirks, and whether it
-  correlates with the app being foregrounded vs. backgrounded at delivery
-  time.
+  `sendEachForMulticast` returns exactly one `messageId`), and a full app
+  reinstall on the affected phone changed nothing, the receiving phone
+  still displayed two notification banners for one message. No foreground
+  `onMessage` handler exists anywhere in the client (checked), and the
+  service worker's `onBackgroundMessage` only calls `showNotification()`
+  once. **Don't re-litigate the token/registration logic if this comes up
+  again — it's provably not the cause.** Conclusion: push delivery is
+  "at least once", not "exactly once" — FCM/APNs is allowed to redeliver a
+  message even after reporting one successful send, and this has been
+  reported elsewhere as a real (if intermittent) characteristic of iOS
+  Safari web push specifically. Fixed the only way a sender-side guarantee
+  can be fixed — deduplicate on the receiving end: the function now sends
+  a unique `data.dedupeId` with every push
+  (`functions/index.js`/`crypto.randomUUID()`), and the service worker
+  (`public/firebase-messaging-sw.js`) remembers ids it's already shown
+  (via the Cache API, since a SW has no `localStorage`) and skips a
+  repeat. If duplicates ever recur after this, the sender side is still
+  provably fine — look at whether the dedupe cache itself is somehow
+  getting cleared, not at the token/send logic again.
 
 ## iOS PWA stale cache
 
