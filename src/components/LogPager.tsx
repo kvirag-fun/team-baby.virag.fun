@@ -3,12 +3,14 @@ import type { Entry, EntryType } from "@/lib/types";
 import { ActivityRibbon } from "./ActivityRibbon";
 import { EntryList } from "./EntryList";
 
-const PAGES: { type: EntryType; label: string; dot: string }[] = [
-  { type: "sleep", label: "Sleep", dot: "bg-indigo-400" },
-  { type: "awake", label: "Awake", dot: "bg-amber-400" },
-  { type: "feed", label: "Feed", dot: "bg-emerald-400" },
-  { type: "diaper", label: "Diapers", dot: "bg-sky-400" },
-  { type: "supplement", label: "Supplements", dot: "bg-red-400" },
+// A page can cover more than one entry type: nap, overnight and awake are
+// three alternatives of the same thing (the baby is always in exactly one of
+// them), so they share one page rather than being split across two.
+const PAGES: { key: "sleep" | "feed" | "supplement" | "diaper"; label: string; dot: string; types: EntryType[] }[] = [
+  { key: "sleep", label: "Sleep & awake", dot: "bg-indigo-400", types: ["sleep", "awake"] },
+  { key: "feed", label: "Feed", dot: "bg-emerald-400", types: ["feed"] },
+  { key: "diaper", label: "Diapers", dot: "bg-sky-400", types: ["diaper"] },
+  { key: "supplement", label: "Supplements", dot: "bg-red-400", types: ["supplement"] },
 ];
 
 const SWIPE_AXIS_THRESHOLD = 8;
@@ -33,11 +35,12 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
   const containerRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);
 
-  const byType = useMemo(() => {
-    const map: Record<EntryType, Entry[]> = { sleep: [], awake: [], feed: [], supplement: [], diaper: [] };
-    for (const e of entries) map[e.type].push(e);
-    return map;
-  }, [entries]);
+  // Filtering the already-sorted list per page keeps one ordering for all of
+  // them, rather than concatenating per-type buckets and re-sorting.
+  const byPage = useMemo(
+    () => PAGES.map((p) => entries.filter((e) => p.types.includes(e.type))),
+    [entries],
+  );
 
   function onScroll() {
     const el = containerRef.current;
@@ -163,7 +166,7 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
       <div className="flex justify-center gap-1.5 pb-1 pt-1">
         {PAGES.map((p, i) => (
           <button
-            key={p.type}
+            key={p.key}
             onClick={() => goTo(i)}
             aria-label={`Go to ${p.label}`}
             className={`h-1.5 rounded-full transition-all ${page === i ? `w-6 ${p.dot}` : "w-1.5 bg-slate-700"}`}
@@ -176,10 +179,10 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
         className="flex overflow-x-auto"
         style={{ scrollbarWidth: "none", touchAction: "pan-y" }}
       >
-        {PAGES.map((p) => (
-          <div key={p.type} className="w-full shrink-0">
-            <ActivityRibbon type={p.type} entries={entries} />
-            <EntryList entries={byType[p.type]} onEdit={onEdit} />
+        {PAGES.map((p, i) => (
+          <div key={p.key} className="w-full shrink-0">
+            <ActivityRibbon type={p.key} entries={entries} />
+            <EntryList entries={byPage[i]} onEdit={onEdit} />
           </div>
         ))}
       </div>

@@ -38,61 +38,24 @@ export function ActivityRibbon({
   type,
   entries,
 }: {
-  type: "sleep" | "awake" | "feed" | "supplement" | "diaper";
+  type: "sleep" | "feed" | "supplement" | "diaper";
   entries: Entry[];
 }) {
   useTick();
   const [busy, setBusy] = useState(false);
 
-  if (type === "sleep") return <SleepRibbon entries={entries} busy={busy} setBusy={setBusy} />;
   if (type === "feed") return <FeedRibbon busy={busy} setBusy={setBusy} />;
   if (type === "supplement") return <SupplementRibbon busy={busy} setBusy={setBusy} />;
   if (type === "diaper") return <DiaperRibbon busy={busy} setBusy={setBusy} />;
-
-  const open = findOpenEntry(entries, "awake");
-
-  async function toggle() {
-    setBusy(true);
-    try {
-      if (open) await stopEntry(open);
-      else await startAwake(entries);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
-      {open ? (
-        <button
-          onClick={toggle}
-          disabled={busy}
-          className="flex w-full items-center justify-between rounded-2xl bg-amber-950 px-5 py-4 text-amber-200 ring-2 ring-amber-400 disabled:opacity-60"
-        >
-          <span className="flex items-center gap-3">
-            <Sun className="h-6 w-6" />
-            <span className="text-left">
-              <span className="block text-lg font-semibold">Awake since {fmtTime(open.startTime)}</span>
-              <span className="block text-sm opacity-80">{fmtDuration(open.startTime, null)} so far</span>
-            </span>
-          </span>
-          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <span className="rounded-full bg-black/20 px-3 py-1 text-sm font-medium">End</span>}
-        </button>
-      ) : (
-        <QuickButton icon={Sun} label="Awake" bg="bg-amber-400" text="text-amber-950" busy={busy} onClick={toggle} />
-      )}
-    </div>
-  );
+  return <SleepAwakeRibbon entries={entries} busy={busy} setBusy={setBusy} />;
 }
 
-// Overnight is offered as a quick-start option in the evening/night window
-// (18:00–05:59); outside that window only Nap makes sense as a choice.
-function isOvernightAvailable() {
-  const h = new Date().getHours();
-  return h >= 18 || h < 6;
-}
-
-function SleepRibbon({
+// Nap, overnight and awake are three alternatives of one thing — the baby is
+// always in exactly one of them — so they share a page and a ribbon rather
+// than being split across two. Starting any one of them closes whichever was
+// running, which is what makes them alternatives rather than independent
+// timers (see startSleep/startAwake).
+function SleepAwakeRibbon({
   entries,
   busy,
   setBusy,
@@ -101,13 +64,13 @@ function SleepRibbon({
   busy: boolean;
   setBusy: (b: boolean) => void;
 }) {
-  const open = findOpenEntry(entries, "sleep");
-  const overnightAvailable = isOvernightAvailable();
+  const open = findOpenEntry(entries, "sleep") ?? findOpenEntry(entries, "awake");
 
-  async function start(sleepType: "nap" | "overnight") {
+  async function start(kind: "nap" | "overnight" | "awake") {
     setBusy(true);
     try {
-      await startSleep(entries, sleepType);
+      if (kind === "awake") await startAwake(entries);
+      else await startSleep(entries, kind);
     } finally {
       setBusy(false);
     }
@@ -124,28 +87,37 @@ function SleepRibbon({
   }
 
   if (open) {
+    const isAwake = open.type === "awake";
     const isOvernight = open.sleepType === "overnight";
+    const Icon = isAwake ? Sun : isOvernight ? MoonStar : Moon;
+    const label = isAwake ? "Awake" : isOvernight ? "Overnight" : "Nap";
     return (
       <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
         <button
           onClick={end}
           disabled={busy}
           className={`flex w-full items-center justify-between rounded-2xl px-5 py-4 disabled:opacity-60 ${
-            isOvernight
-              ? "bg-indigo-950 text-indigo-200 ring-2 ring-indigo-700"
-              : "bg-indigo-950 text-indigo-200 ring-2 ring-indigo-400"
+            isAwake
+              ? "bg-amber-950 text-amber-200 ring-2 ring-amber-400"
+              : isOvernight
+                ? "bg-indigo-950 text-indigo-200 ring-2 ring-indigo-700"
+                : "bg-indigo-950 text-indigo-200 ring-2 ring-indigo-400"
           }`}
         >
           <span className="flex items-center gap-3">
-            {isOvernight ? <MoonStar className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
+            <Icon className="h-6 w-6" />
             <span className="text-left">
               <span className="block text-lg font-semibold">
-                {isOvernight ? "Overnight" : "Nap"} since {fmtTime(open.startTime)}
+                {label} since {fmtTime(open.startTime)}
               </span>
               <span className="block text-sm opacity-80">{fmtDuration(open.startTime, null)} so far</span>
             </span>
           </span>
-          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <span className="rounded-full bg-black/20 px-3 py-1 text-sm font-medium">End</span>}
+          {busy ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <span className="rounded-full bg-black/20 px-3 py-1 text-sm font-medium">End</span>
+          )}
         </button>
       </div>
     );
@@ -153,14 +125,11 @@ function SleepRibbon({
 
   return (
     <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
-      {overnightAvailable ? (
-        <div className="grid grid-cols-2 gap-2">
-          <QuickButton icon={Moon} label="Nap" bg="bg-indigo-400" text="text-indigo-950" busy={busy} onClick={() => start("nap")} />
-          <QuickButton icon={MoonStar} label="Overnight" bg="bg-indigo-800" text="text-indigo-50" busy={busy} onClick={() => start("overnight")} />
-        </div>
-      ) : (
+      <div className="grid grid-cols-3 gap-2">
         <QuickButton icon={Moon} label="Nap" bg="bg-indigo-400" text="text-indigo-950" busy={busy} onClick={() => start("nap")} />
-      )}
+        <QuickButton icon={MoonStar} label="Overnight" bg="bg-indigo-800" text="text-indigo-50" busy={busy} onClick={() => start("overnight")} />
+        <QuickButton icon={Sun} label="Awake" bg="bg-amber-400" text="text-amber-950" busy={busy} onClick={() => start("awake")} />
+      </div>
     </div>
   );
 }

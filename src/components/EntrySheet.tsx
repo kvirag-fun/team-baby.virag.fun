@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Moon, Sun, Milk, Pill, Trash2, X } from "lucide-react";
+import { SunMoon, Milk, Pill, Trash2, X } from "lucide-react";
 import { Diaper } from "./DiaperIcon";
 import {
   isPointType,
@@ -14,13 +14,32 @@ import {
 } from "@/lib/types";
 import { toInputValue, fromInputValue } from "@/lib/time";
 
-const TYPE_OPTIONS: { key: EntryType; label: string; icon: typeof Moon; active: string }[] = [
-  { key: "sleep", label: "Sleep", icon: Moon, active: "bg-indigo-500 text-white" },
-  { key: "awake", label: "Awake", icon: Sun, active: "bg-amber-400 text-amber-950" },
+// Nap, overnight and awake are three alternatives of one kind rather than
+// separate kinds, so they share a single button here and are chosen between
+// below — matching how the log page presents them. Its icon is a moon and a
+// sun in one, since it covers both.
+type Kind = "sleep" | "feed" | "diaper" | "supplement";
+type SleepKind = SleepType | "awake";
+
+const TYPE_OPTIONS: { key: Kind; label: string; icon: typeof SunMoon; active: string }[] = [
+  { key: "sleep", label: "Sleep / Awake", icon: SunMoon, active: "bg-indigo-500 text-white" },
   { key: "feed", label: "Feed", icon: Milk, active: "bg-emerald-500 text-white" },
   { key: "diaper", label: "Diaper", icon: Diaper, active: "bg-sky-500 text-white" },
   { key: "supplement", label: "Supplement", icon: Pill, active: "bg-red-500 text-white" },
 ];
+
+const SLEEP_KINDS: { key: SleepKind; label: string; active: string }[] = [
+  { key: "nap", label: "Nap", active: "bg-indigo-400 text-indigo-950" },
+  { key: "overnight", label: "Overnight", active: "bg-indigo-800 text-indigo-50" },
+  { key: "awake", label: "Awake", active: "bg-amber-400 text-amber-950" },
+];
+
+/** Awake is its own entry type in the data, so the picker's three-way choice
+ * has to fold back into a type plus a sleepType on save. */
+function entryTypeFor(kind: Kind, sleepKind: SleepKind): EntryType {
+  if (kind !== "sleep") return kind;
+  return sleepKind === "awake" ? "awake" : "sleep";
+}
 
 export function EntrySheet({
   initial,
@@ -33,12 +52,15 @@ export function EntrySheet({
   onSave: (entry: NewEntry) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
 }) {
-  const [type, setType] = useState<EntryType>(initial?.type ?? "sleep");
+  const [kind, setKind] = useState<Kind>(initial && initial.type !== "awake" ? initial.type : "sleep");
+  const [sleepKind, setSleepKind] = useState<SleepKind>(
+    initial?.type === "awake" ? "awake" : (initial?.sleepType ?? "nap"),
+  );
+  const type = entryTypeFor(kind, sleepKind);
   const [start, setStart] = useState(toInputValue(initial?.startTime ?? Date.now()));
   const [ongoing, setOngoing] = useState(initial ? initial.endTime == null : false);
   const [end, setEnd] = useState(toInputValue(initial?.endTime ?? Date.now()));
   const [feedType, setFeedType] = useState<FeedType>(initial?.feedType ?? "breastmilk");
-  const [sleepType, setSleepType] = useState<SleepType>(initial?.sleepType ?? "nap");
   const [supplementType, setSupplementType] = useState<SupplementType>(initial?.supplementType ?? "vitaminD");
   const [diaperType, setDiaperType] = useState<DiaperType>(initial?.diaperType ?? "wet");
   const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount) : "");
@@ -57,7 +79,7 @@ export function EntrySheet({
         startTime,
         endTime: isPoint ? null : ongoing ? null : fromInputValue(end),
         feedType: type === "feed" ? feedType : null,
-        sleepType: type === "sleep" ? sleepType : null,
+        sleepType: type === "sleep" ? (sleepKind as SleepType) : null,
         supplementType: type === "supplement" ? supplementType : null,
         diaperType: type === "diaper" ? diaperType : null,
         amount: type === "feed" && amount !== "" ? Number(amount) : null,
@@ -97,16 +119,15 @@ export function EntrySheet({
           </div>
 
           <div className="flex flex-col gap-4 p-4">
-          {/* Three across rather than one row of five: "Supplement" needs
-              the width, and five columns squeezes every label to unreadable
-              on a phone. */}
-          <div className="grid grid-cols-3 gap-2">
+          {/* Two across: four kinds, and "Sleep / Awake" and "Supplement"
+              both need more width than a narrower column gives them. */}
+          <div className="grid grid-cols-2 gap-2">
             {TYPE_OPTIONS.map((opt) => (
               <button
                 key={opt.key}
-                onClick={() => setType(opt.key)}
+                onClick={() => setKind(opt.key)}
                 className={`flex flex-col items-center gap-1 rounded-xl border py-3 ${
-                  type === opt.key ? `border-transparent ${opt.active}` : "border-slate-700 text-slate-400"
+                  kind === opt.key ? `border-transparent ${opt.active}` : "border-slate-700 text-slate-400"
                 }`}
               >
                 <opt.icon className="h-5 w-5" />
@@ -150,28 +171,19 @@ export function EntrySheet({
             </>
           )}
 
-          {type === "sleep" && (
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setSleepType("nap")}
-                className={`rounded-xl border py-2 text-sm font-medium ${
-                  sleepType === "nap"
-                    ? "border-transparent bg-indigo-400 text-indigo-950"
-                    : "border-slate-700 text-slate-400"
-                }`}
-              >
-                Nap
-              </button>
-              <button
-                onClick={() => setSleepType("overnight")}
-                className={`rounded-xl border py-2 text-sm font-medium ${
-                  sleepType === "overnight"
-                    ? "border-transparent bg-indigo-800 text-indigo-50"
-                    : "border-slate-700 text-slate-400"
-                }`}
-              >
-                Overnight
-              </button>
+          {kind === "sleep" && (
+            <div className="grid grid-cols-3 gap-2">
+              {SLEEP_KINDS.map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setSleepKind(opt.key)}
+                  className={`rounded-xl border py-2 text-sm font-medium ${
+                    sleepKind === opt.key ? `border-transparent ${opt.active}` : "border-slate-700 text-slate-400"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           )}
 
