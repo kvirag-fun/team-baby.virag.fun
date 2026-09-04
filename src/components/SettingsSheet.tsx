@@ -11,7 +11,7 @@ import {
   EMOJI_MAX_LENGTH,
   ROLE_MAX_LENGTH,
 } from "@/lib/role";
-import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
+import { useSheetScrollLock } from "@/hooks/useSheetScrollLock";
 
 export function SettingsSheet({
   babyName,
@@ -30,7 +30,7 @@ export function SettingsSheet({
   const [avatarDraft, setAvatarDraft] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  useLockBodyScroll();
+  const panelRef = useSheetScrollLock<HTMLDivElement>();
   const shownAvatar = avatarDraft ?? avatar;
 
   async function pickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -65,7 +65,8 @@ export function SettingsSheet({
   return (
     <div className="fixed inset-0 z-30 flex items-end bg-black/60" onClick={onClose}>
       <div
-        className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-slate-950 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
+        ref={panelRef}
+        className="max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-slate-950 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 pt-4">

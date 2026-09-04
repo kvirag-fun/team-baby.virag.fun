@@ -13,7 +13,7 @@ import {
   type SupplementType,
 } from "@/lib/types";
 import { toInputValue, fromInputValue } from "@/lib/time";
-import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
+import { useSheetScrollLock } from "@/hooks/useSheetScrollLock";
 
 // Nap, overnight and awake are three alternatives of one kind rather than
 // separate kinds, so they share a single button here and are chosen between
@@ -69,7 +69,7 @@ export function EntrySheet({
   const [note, setNote] = useState(initial?.note ?? "");
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  useLockBodyScroll();
+  const panelRef = useSheetScrollLock<HTMLDivElement>();
 
   async function save() {
     setBusy(true);
@@ -109,7 +109,8 @@ export function EntrySheet({
   return (
     <div className="fixed inset-0 z-30 flex items-end bg-black/60" onClick={onClose}>
       <div
-        className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-slate-950 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
+        ref={panelRef}
+        className="max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-slate-950 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative">
