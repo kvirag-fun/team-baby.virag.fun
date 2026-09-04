@@ -7,8 +7,8 @@ const PAGES: { type: EntryType; label: string; dot: string }[] = [
   { type: "sleep", label: "Sleep", dot: "bg-indigo-400" },
   { type: "awake", label: "Awake", dot: "bg-amber-400" },
   { type: "feed", label: "Feed", dot: "bg-emerald-400" },
-  { type: "supplement", label: "Supplements", dot: "bg-red-400" },
   { type: "diaper", label: "Diapers", dot: "bg-sky-400" },
+  { type: "supplement", label: "Supplements", dot: "bg-red-400" },
 ];
 
 const SWIPE_AXIS_THRESHOLD = 8;
