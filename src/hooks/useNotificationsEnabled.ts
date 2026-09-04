@@ -1,17 +1,6 @@
-import { useEffect, useState } from "react";
 import { subscribeNotificationsEnabled } from "@/lib/settings";
+import { useSubscription } from "./useSubscription";
 
 export function useNotificationsEnabled() {
-  const [enabled, setEnabled] = useState(false);
-
-  useEffect(
-    () =>
-      subscribeNotificationsEnabled(
-        (v) => setEnabled(v),
-        () => {},
-      ),
-    [],
-  );
-
-  return enabled;
+  return useSubscription(subscribeNotificationsEnabled, false).value;
 }

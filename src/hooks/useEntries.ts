@@ -1,25 +1,10 @@
-import { useEffect, useState } from "react";
 import { subscribeEntries } from "@/lib/entries";
+import { useSubscription } from "./useSubscription";
 import type { Entry } from "@/lib/types";
 
+const NONE: Entry[] = [];
+
 export function useEntries() {
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const unsub = subscribeEntries(
-      (e) => {
-        setEntries(e);
-        setLoading(false);
-      },
-      (err) => {
-        setError(err.message);
-        setLoading(false);
-      },
-    );
-    return unsub;
-  }, []);
-
+  const { value: entries, loading, error } = useSubscription(subscribeEntries, NONE);
   return { entries, loading, error };
 }

@@ -1,17 +1,6 @@
-import { useEffect, useState } from "react";
 import { subscribeBabyName } from "@/lib/settings";
+import { useSubscription } from "./useSubscription";
 
 export function useBabyName() {
-  const [babyName, setBabyNameState] = useState("");
-
-  useEffect(
-    () =>
-      subscribeBabyName(
-        (name) => setBabyNameState(name),
-        () => {},
-      ),
-    [],
-  );
-
-  return babyName;
+  return useSubscription(subscribeBabyName, "").value;
 }

@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { browserLocalPersistence, initializeAuth, indexedDBLocalPersistence } from "firebase/auth";
-import { initializeFirestore } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
 
@@ -22,7 +22,16 @@ export const app = initializeApp(firebaseConfig);
 export const auth = initializeAuth(app, {
   persistence: [indexedDBLocalPersistence, browserLocalPersistence],
 });
-export const db = initializeFirestore(app, {});
+// Cached in IndexedDB so an app open renders last-known data immediately
+// instead of blocking on a server round-trip. Without this the app has
+// nothing at all to show until Firestore answers, and an installed PWA
+// resumed with a dead connection sits on "Loading…" indefinitely. The
+// multi-tab manager keeps Safari and the installed app in step when both
+// are open on the same phone. Falls back to an in-memory cache on its own
+// if IndexedDB is unavailable (private browsing).
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+});
 
 // Region must match where the Cloud Function is deployed (functions/index.js).
 export const functions = getFunctions(app, "europe-central2");

@@ -199,6 +199,34 @@ delete-and-re-add of the app on both phones. That was the final one.
 Confirmed working on both phones after that reinstall — one notification
 per logged entry.
 
+## "Loading…" forever — a Firestore listener that died without saying so
+
+Symptom: the app opens, sits on "Loading…", the header shows the fallback
+"Team Baby" with no avatar, and no error is displayed. All three
+subscriptions (entries, name, avatar) are hanging at once, and nothing has
+errored — so it isn't rules or auth.
+
+Two separate gaps caused it, both now handled in
+`src/hooks/useSubscription.ts`, which every subscribing hook goes through:
+
+1. **A Firestore listener is never retried after an error.** `onSnapshot`
+   tears the listener down for good and calls the error handler once —
+   anything that trips it (an expired token, a transient rules rejection)
+   leaves the screen empty until the app is restarted. The hook now
+   resubscribes with backoff (1s, 2s, 4s… capped at 30s).
+2. **A listener can go dead without erroring at all.** An installed PWA
+   that iOS suspended in the background resumes with a connection that
+   never delivers and never fails, so no callback of either kind runs.
+   Nothing in the SDK notices. The hook now resubscribes on
+   `visibilitychange` (returning to the foreground) and on `online`.
+
+Separately, `src/lib/firebase.ts` now enables `persistentLocalCache` —
+without it there is no cached data at all, so a slow or dead connection
+means a blank screen rather than last-known data, and every app open needs
+a live round-trip before anything renders.
+
+Don't "simplify" a subscribing hook back to a bare `onSnapshot`.
+
 ## iOS PWA stale cache
 
 Even with no general service worker, an installed home-screen PWA can
