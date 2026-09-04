@@ -24,5 +24,5 @@ jobs:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
         run: |
-          npx firebase-tools functions:log --only notifyOnNewEntry -n 50 \
+          npx firebase-tools functions:log --only notifyOnNewEntry -n 1000 \
             --project "$FIREBASE_PROJECT_ID" --token "$FIREBASE_TOKEN" || true
