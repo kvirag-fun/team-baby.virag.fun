@@ -10,9 +10,12 @@ import {
   Timestamp,
   updateDoc,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "./firebase";
 import { getDeviceId } from "./device";
 import type { Entry, NewEntry } from "./types";
+
+const notifyOnNewEntry = httpsCallable(functions, "notifyOnNewEntry");
 
 const entriesCol = collection(db, "entries");
 
@@ -44,15 +47,23 @@ export function subscribeEntries(onChange: (entries: Entry[]) => void, onError: 
 }
 
 export async function createEntry(entry: NewEntry) {
+  const deviceId = getDeviceId();
   await addDoc(entriesCol, {
     ...entry,
     startTime: Timestamp.fromMillis(entry.startTime),
     endTime: entry.endTime != null ? Timestamp.fromMillis(entry.endTime) : null,
     // Which browser install made this write, so the notification Cloud
     // Function can skip pushing back to the device that just logged it.
-    deviceId: getDeviceId(),
+    deviceId,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
+  });
+
+  // Called directly rather than via a Firestore-triggered (Eventarc)
+  // function — fire-and-forget, since a notification failure shouldn't
+  // block or fail the entry that was just successfully logged.
+  notifyOnNewEntry({ ...entry, deviceId }).catch((err) => {
+    console.error("notifyOnNewEntry call failed:", err);
   });
 }
 

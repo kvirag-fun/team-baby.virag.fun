@@ -1,15 +1,24 @@
 // Fans out a push notification to every registered device except the one
 // that made the write, whenever a new entry is logged — but only while the
 // shared settings/app.notificationsEnabled flag is on.
+//
+// Called directly by the client (an HTTPS callable) right after it saves an
+// entry, rather than triggered off the Firestore write via Eventarc — the
+// event-trigger path proved unreliable to deploy and near-impossible to
+// debug when it silently stopped delivering events. A direct call fails
+// loudly and immediately instead.
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore } = require("firebase-admin/firestore");
 const { getMessaging } = require("firebase-admin/messaging");
-const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { logger } = require("firebase-functions");
 
 initializeApp();
 const db = getFirestore();
 const messaging = getMessaging();
+
+const FAMILY_EMAIL = "timka@team.family";
+const REGION = "europe-central2";
 
 function describeEntry(entry) {
   const isRange = entry.type === "sleep" || entry.type === "awake";
@@ -34,16 +43,22 @@ function describeEntry(entry) {
   return "New entry logged";
 }
 
-exports.notifyOnNewEntry = onDocumentCreated("entries/{entryId}", async (event) => {
-  const entry = event.data?.data();
-  if (!entry) return;
+exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
+  if (request.auth?.token?.email !== FAMILY_EMAIL) {
+    throw new HttpsError("permission-denied", "Not authorized.");
+  }
+
+  const entry = request.data;
+  if (!entry || typeof entry !== "object") {
+    throw new HttpsError("invalid-argument", "Missing entry data.");
+  }
 
   const settingsSnap = await db.doc("settings/app").get();
-  if (settingsSnap.data()?.notificationsEnabled !== true) return;
+  if (settingsSnap.data()?.notificationsEnabled !== true) return { sent: 0 };
 
   const devicesSnap = await db.collection("devices").get();
   const tokens = devicesSnap.docs.filter((d) => d.data().deviceId !== entry.deviceId).map((d) => d.id);
-  if (tokens.length === 0) return;
+  if (tokens.length === 0) return { sent: 0 };
 
   const response = await messaging.sendEachForMulticast({
     tokens,
@@ -60,4 +75,6 @@ exports.notifyOnNewEntry = onDocumentCreated("entries/{entryId}", async (event) 
       errors: response.responses.filter((r) => !r.success).map((r) => r.error?.message),
     });
   }
+
+  return { sent: response.successCount };
 });

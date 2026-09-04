@@ -19,10 +19,23 @@ jobs:
         with:
           node-version: 20
 
-      - name: Print recent function logs (diagnostic — deploy skipped for faster iteration)
+      - run: npm --prefix functions ci
+
+      - name: Delete stale function (one-off — switching event trigger to HTTPS callable)
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
         run: |
-          npx firebase-tools functions:log --only notifyOnNewEntry -n 1000 \
-            --project "$FIREBASE_PROJECT_ID" --token "$FIREBASE_TOKEN" || true
+          npx firebase-tools functions:delete notifyOnNewEntry --region europe-central2 \
+            --project "$FIREBASE_PROJECT_ID" --token "$FIREBASE_TOKEN" --force || true
+
+      - name: Deploy
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: |
+          if [ -z "$FIREBASE_TOKEN" ] || [ -z "$FIREBASE_PROJECT_ID" ]; then
+            echo "::error::FIREBASE_TOKEN and/or FIREBASE_PROJECT_ID secret is missing — see README Setup (push notifications section) for how to generate a CI token with 'firebase login:ci'."
+            exit 1
+          fi
+          npx firebase-tools deploy --only functions --project "$FIREBASE_PROJECT_ID" --token "$FIREBASE_TOKEN" --non-interactive --force

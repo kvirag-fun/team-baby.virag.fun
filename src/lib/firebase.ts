@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { browserLocalPersistence, initializeAuth, indexedDBLocalPersistence } from "firebase/auth";
 import { initializeFirestore } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
 import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
 
 // Not a secret: a Firebase web config only identifies the project. Real
@@ -26,6 +27,9 @@ export const auth = initializeAuth(app, {
   persistence: [indexedDBLocalPersistence, browserLocalPersistence],
 });
 export const db = initializeFirestore(app, {});
+
+// Region must match where the Cloud Function is deployed (functions/index.js).
+export const functions = getFunctions(app, "europe-central2");
 
 // Not every browser supports FCM (e.g. no iOS Safari support outside an
 // installed PWA) — resolve to null rather than throwing on unsupported ones.
