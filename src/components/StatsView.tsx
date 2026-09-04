@@ -189,9 +189,9 @@ export function StatsView({ entries }: { entries: Entry[] }) {
 
 function Stat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="rounded-xl bg-slate-900 p-3 text-center">
-      <div className={`text-lg font-semibold ${color}`}>{value}</div>
-      <div className="text-xs text-slate-500">{label}</div>
+    <div className="rounded-xl bg-slate-900 px-3 py-2 text-center">
+      <div className={`text-base font-semibold leading-tight ${color}`}>{value}</div>
+      <div className="text-xs leading-tight text-slate-500">{label}</div>
     </div>
   );
 }
