@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Entry } from "@/lib/types";
 import { colorFor, labelFor } from "@/lib/colors";
@@ -6,6 +6,10 @@ import { fmtTime, startOfDay } from "@/lib/time";
 
 const DAY_MS = 86_400_000;
 const HOUR_LABELS = Array.from({ length: 25 }, (_, h) => h);
+
+const SWIPE_AXIS_THRESHOLD = 8;
+const SWIPE_DISTANCE_PX = 60;
+const SWIPE_VELOCITY_PX_PER_MS = 0.5;
 
 const isPointType = (t: Entry["type"]) => t === "feed" || t === "supplement";
 
@@ -76,6 +80,63 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
 
   const step = mode === "day" ? DAY_MS : DAY_MS * 7;
 
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Swipe left/right over the grid moves to the next/previous day (or week,
+  // in week mode) — same axis-lock approach as the Log tab's pager so a
+  // vertical scroll of the page never gets mistaken for a swipe, but simpler
+  // since there's no fixed set of pages to drag between here: just detect
+  // the gesture and jump the anchor date.
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+
+    let startX = 0;
+    let startY = 0;
+    let startT = 0;
+    let axis: "x" | "y" | null = null;
+
+    function onTouchStart(e: TouchEvent) {
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      startT = e.timeStamp;
+      axis = null;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      const t = e.touches[0];
+      if (axis === null) {
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        if (Math.abs(dx) < SWIPE_AXIS_THRESHOLD && Math.abs(dy) < SWIPE_AXIS_THRESHOLD) return;
+        axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      }
+      if (axis === "x") e.preventDefault();
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      if (axis === "x") {
+        const t = e.changedTouches[0];
+        const dx = t.clientX - startX;
+        const dt = Math.max(1, e.timeStamp - startT);
+        if (Math.abs(dx) > SWIPE_DISTANCE_PX || Math.abs(dx) / dt > SWIPE_VELOCITY_PX_PER_MS) {
+          setAnchor((a) => a + (dx < 0 ? step : -step));
+        }
+      }
+      axis = null;
+    }
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [step]);
+
   return (
     <div className="flex flex-col px-4 pb-4">
       <div className="mb-3 flex items-center justify-between">
@@ -103,7 +164,12 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
         </div>
       </div>
 
-      <div className="flex overflow-x-auto rounded-xl bg-slate-900/50">
+      <div
+        ref={gridRef}
+        className="flex overflow-x-auto rounded-xl bg-slate-900/50"
+        style={{ touchAction: "pan-y" }}
+      >
+
         <div className="flex w-8 shrink-0 flex-col text-right">
           {HOUR_LABELS.filter((h) => h % 3 === 0).map((h) => (
             <div key={h} className="relative h-[calc(100%/8)] text-[10px] text-slate-500" style={{ height: 720 / 8 }}>
