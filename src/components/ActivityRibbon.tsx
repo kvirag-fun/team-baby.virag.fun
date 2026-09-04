@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Loader2, Moon, MoonStar, Sun, Milk, Pill, type LucideIcon } from "lucide-react";
+import { Loader2, Moon, MoonStar, Sun, Pill, type LucideIcon } from "lucide-react";
 import type { Entry } from "@/lib/types";
 import { Diaper } from "./DiaperIcon";
+import { BabyBottle, Breast } from "./FeedIcons";
 import { findOpenEntry, logDiaper, logFeed, logSupplement, startAwake, startSleep, stopEntry } from "@/lib/activity";
 import { fmtDuration, fmtTime } from "@/lib/time";
 import { useTick } from "@/hooks/useTick";
@@ -162,8 +163,8 @@ function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
   return (
     <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
       <div className="grid grid-cols-2 gap-2">
-        <QuickButton icon={Milk} label="Breastmilk" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk")} />
-        <QuickButton icon={Milk} label="Formula" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => log("formula")} />
+        <QuickButton icon={Breast} label="Breastmilk" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk")} />
+        <QuickButton icon={BabyBottle} label="Formula" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => log("formula")} />
       </div>
     </div>
   );
