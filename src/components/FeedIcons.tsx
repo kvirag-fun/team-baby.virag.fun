@@ -14,13 +14,13 @@ export const Breast = createLucideIcon("Breast", [
 ]);
 
 /** Formula. A baby bottle rather than a generic one: what makes it read as
- * a baby's is the fat bulb teat and the wide collar under it — a narrow neck
+ * a baby's is the pointed teat and the wide collar under it — a narrow neck
  * looks like a lab flask. The rounded base and the two measurement marks do
  * the rest; without the marks it reads as a lightbulb. */
 export const BabyBottle = createLucideIcon("BabyBottle", [
   [
     "path",
-    { d: "M12 1.5c-1.7 0-2.8 1.1-2.8 2.5 0 1 .7 1.4.7 2h4.2c0-.6.7-1 .7-2 0-1.4-1.1-2.5-2.8-2.5z", key: "teat" },
+    { d: "M12 1.3c-.6 0-1 .8-1.1 1.6-.2 1.4-1.7 1.9-1.7 3.1h5.6c0-1.2-1.5-1.7-1.7-3.1C13 2.1 12.6 1.3 12 1.3z", key: "teat" },
   ],
   ["rect", { x: "8.2", y: "6", width: "7.6", height: "2.2", rx: "1.1", key: "collar" }],
   ["path", { d: "M9 8.2h6a3 3 0 0 1 3 3v5.3a5.5 5.5 0 0 1-12 0v-5.3a3 3 0 0 1 3-3z", key: "body" }],
