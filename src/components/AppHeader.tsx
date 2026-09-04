@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Bell, BellOff, Settings } from "lucide-react";
+import { useAvatar } from "@/hooks/useAvatar";
 import { useBabyName } from "@/hooks/useBabyName";
 import { useNotificationsEnabled } from "@/hooks/useNotificationsEnabled";
 import { setNotificationsEnabled } from "@/lib/settings";
@@ -8,12 +9,16 @@ import { SettingsSheet } from "./SettingsSheet";
 
 export function AppHeader() {
   const babyName = useBabyName();
+  const avatar = useAvatar();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <>
       <header className="flex items-center justify-between gap-1.5 px-4 pb-2 pt-[calc(env(safe-area-inset-top)+1rem)]">
-        <h1 className="text-lg font-semibold">Team {babyName || "Baby"}</h1>
+        <div className="flex min-w-0 items-center gap-2">
+          {avatar && <img src={avatar} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />}
+          <h1 className="truncate text-lg font-semibold">Team {babyName || "Baby"}</h1>
+        </div>
         <div className="flex items-center gap-1">
           <NotificationsToggle />
           <button
@@ -25,7 +30,9 @@ export function AppHeader() {
           </button>
         </div>
       </header>
-      {settingsOpen && <SettingsSheet babyName={babyName} onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <SettingsSheet babyName={babyName} avatar={avatar} onClose={() => setSettingsOpen(false)} />
+      )}
     </>
   );
 }

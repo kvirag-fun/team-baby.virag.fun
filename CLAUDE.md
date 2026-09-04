@@ -33,7 +33,13 @@ Read this before touching auth, Firestore rules, or `functions/`.
    (`localStorage`, `src/lib/role.ts`). Don't "fix" the role by moving it
    into the shared settings doc: it describes whoever holds *that* phone,
    and both phones share one account, so a shared field would just have the
-   two of them overwriting each other.
+   two of them overwriting each other. The baby's photo is shared like the
+   name, but lives in its own document (`settings/avatar`) rather than as a
+   field on `settings/app` — every screen subscribes to `settings/app`, and
+   an image there would ride along with each of those snapshots. It's a
+   downscaled JPEG data URL (`src/lib/image.ts`, 256px square, ~15 KB), not
+   Firebase Storage: no extra bucket, rules or CORS setup, and it stays far
+   under Firestore's ~1 MiB document cap.
 
 ## Cloud Function (`functions/index.js`) — IAM roles the runtime service
 account (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`) needs.

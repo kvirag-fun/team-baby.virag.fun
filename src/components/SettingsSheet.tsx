@@ -1,12 +1,39 @@
-import { useState } from "react";
-import { X } from "lucide-react";
-import { setBabyName } from "@/lib/settings";
+import { useRef, useState } from "react";
+import { Baby, X } from "lucide-react";
+import { setAvatar, setBabyName } from "@/lib/settings";
+import { toAvatarDataUrl } from "@/lib/image";
 import { getRole, setRole, ROLE_MAX_LENGTH } from "@/lib/role";
 
-export function SettingsSheet({ babyName, onClose }: { babyName: string; onClose: () => void }) {
+export function SettingsSheet({
+  babyName,
+  avatar,
+  onClose,
+}: {
+  babyName: string;
+  avatar: string;
+  onClose: () => void;
+}) {
   const [name, setName] = useState(babyName);
   const [role, setRoleDraft] = useState(getRole());
+  // null means "untouched" — distinct from "" , which means the photo was
+  // removed and the stored one needs clearing on save.
+  const [avatarDraft, setAvatarDraft] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const shownAvatar = avatarDraft ?? avatar;
+
+  async function pickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Clear the input so picking the same file again after a Remove still
+    // fires a change event.
+    e.target.value = "";
+    if (!file) return;
+    try {
+      setAvatarDraft(await toAvatarDataUrl(file));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
+  }
 
   async function save() {
     setBusy(true);
@@ -14,6 +41,7 @@ export function SettingsSheet({ babyName, onClose }: { babyName: string; onClose
       // Role is local-only and can't fail; the name is a network write, so
       // only it needs the busy state.
       setRole(role);
+      if (avatarDraft !== null) await setAvatar(avatarDraft);
       await setBabyName(name || "Baby");
       onClose();
     } catch (err) {
@@ -36,6 +64,30 @@ export function SettingsSheet({ babyName, onClose }: { babyName: string; onClose
         </div>
 
         <div className="flex flex-col gap-4 p-4">
+          <div className="flex items-center gap-4">
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-900 ring-1 ring-slate-700">
+              {shownAvatar ? (
+                <img src={shownAvatar} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <Baby className="h-7 w-7 text-slate-600" />
+              )}
+            </span>
+            <div className="flex flex-col items-start gap-1">
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-300"
+              >
+                {shownAvatar ? "Change photo" : "Add photo"}
+              </button>
+              {shownAvatar && (
+                <button onClick={() => setAvatarDraft("")} className="px-1 text-sm text-slate-500">
+                  Remove
+                </button>
+              )}
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" onChange={pickPhoto} className="hidden" />
+          </div>
+
           <label className="flex flex-col gap-1 text-sm text-slate-400">
             Baby's name
             <input
