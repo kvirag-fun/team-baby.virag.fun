@@ -54,11 +54,16 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
   }
 
   const settingsSnap = await db.doc("settings/app").get();
-  if (settingsSnap.data()?.notificationsEnabled !== true) return { sent: 0 };
+  if (settingsSnap.data()?.notificationsEnabled !== true) {
+    return { sent: 0, reason: "notificationsEnabled is not true", notificationsEnabled: settingsSnap.data()?.notificationsEnabled ?? null };
+  }
 
   const devicesSnap = await db.collection("devices").get();
+  const deviceIds = devicesSnap.docs.map((d) => d.data().deviceId);
   const tokens = devicesSnap.docs.filter((d) => d.data().deviceId !== entry.deviceId).map((d) => d.id);
-  if (tokens.length === 0) return { sent: 0 };
+  if (tokens.length === 0) {
+    return { sent: 0, reason: "no other registered devices", callerDeviceId: entry.deviceId, registeredDeviceIds: deviceIds, registeredCount: devicesSnap.size };
+  }
 
   const response = await messaging.sendEachForMulticast({
     tokens,
