@@ -34,7 +34,28 @@ export function getEmoji(): string {
 }
 
 export function setEmoji(emoji: string) {
-  write(EMOJI_KEY, emoji, EMOJI_MAX_LENGTH);
+  write(EMOJI_KEY, toSingleEmoji(emoji), EMOJI_MAX_LENGTH);
+}
+
+// Extended_Pictographic covers the pictorial emoji; Regional_Indicator is
+// what flags are made of, and the enclosing keycap is what turns a digit
+// into 1️⃣ — none of those three match each other.
+const EMOJI_CHAR = /\p{Extended_Pictographic}|\p{Regional_Indicator}|\u{20E3}/u;
+
+/** Reduces whatever was typed to a single emoji, dropping ordinary text.
+ *
+ * Splitting on grapheme clusters rather than characters is what keeps a
+ * multi-codepoint emoji in one piece — 👨🏻‍🦰 and 🇭🇺 are each several
+ * codepoints joined together, and slicing them apart yields nonsense. The
+ * *last* emoji wins so that typing a new one replaces the old rather than
+ * being ignored until the field is cleared by hand. */
+export function toSingleEmoji(value: string): string {
+  if (!value) return "";
+  const clusters =
+    typeof Intl !== "undefined" && "Segmenter" in Intl
+      ? Array.from(new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (s) => s.segment)
+      : Array.from(value);
+  return clusters.filter((c) => EMOJI_CHAR.test(c)).pop() ?? "";
 }
 
 function write(key: string, value: string, max: number) {

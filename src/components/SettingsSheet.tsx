@@ -2,7 +2,15 @@ import { useRef, useState } from "react";
 import { Baby, X } from "lucide-react";
 import { setAvatar, setBabyName } from "@/lib/settings";
 import { toAvatarDataUrl } from "@/lib/image";
-import { getEmoji, getRole, setEmoji, setRole, EMOJI_MAX_LENGTH, ROLE_MAX_LENGTH } from "@/lib/role";
+import {
+  getEmoji,
+  getRole,
+  setEmoji,
+  setRole,
+  toSingleEmoji,
+  EMOJI_MAX_LENGTH,
+  ROLE_MAX_LENGTH,
+} from "@/lib/role";
 
 export function SettingsSheet({
   babyName,
@@ -112,7 +120,10 @@ export function SettingsSheet({
                   so a picture can't reach the notification — but text can. */}
               <input
                 value={emoji}
-                onChange={(e) => setEmojiDraft(e.target.value)}
+                onChange={(e) => setEmojiDraft(toSingleEmoji(e.target.value))}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
                 maxLength={EMOJI_MAX_LENGTH}
                 aria-label="Your emoji"
                 placeholder="🙂"
