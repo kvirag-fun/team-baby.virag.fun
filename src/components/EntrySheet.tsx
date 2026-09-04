@@ -18,8 +18,8 @@ const TYPE_OPTIONS: { key: EntryType; label: string; icon: typeof Moon; active: 
   { key: "sleep", label: "Sleep", icon: Moon, active: "bg-indigo-500 text-white" },
   { key: "awake", label: "Awake", icon: Sun, active: "bg-amber-400 text-amber-950" },
   { key: "feed", label: "Feed", icon: Milk, active: "bg-emerald-500 text-white" },
-  { key: "supplement", label: "Supplement", icon: Pill, active: "bg-red-500 text-white" },
   { key: "diaper", label: "Diaper", icon: Diaper, active: "bg-sky-500 text-white" },
+  { key: "supplement", label: "Supplement", icon: Pill, active: "bg-red-500 text-white" },
 ];
 
 export function EntrySheet({
