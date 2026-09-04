@@ -91,6 +91,26 @@ fix in Firestore Console again:
   scheduled function.
 - A future reinstall now costs at most a few days of duplicate pushes,
   self-clearing after that.
+- Also fixed a real gap: `upsertDeviceToken()` (shared by
+  `registerThisDevice` and `touchLastSeen`) prunes sibling tokens for the
+  same `deviceId` on *every* write, not just explicit bell-toggle
+  registration — iOS can rotate a device's push token on its own, and the
+  old `touchLastSeen` only merge-wrote `lastSeen` without pruning, letting
+  a rotated-away token silently orphan and keep receiving pushes.
+- **Even after the devices collection was confirmed clean (exactly one
+  token per phone) and diagnostics proved the whole pipeline fires exactly
+  once per log action** (client calls once, function invokes once, FCM
+  `sendEachForMulticast` returns exactly one `messageId`), the receiving
+  phone still displayed two notification banners for that one message. No
+  foreground `onMessage` handler exists anywhere in the client (checked),
+  and the service worker's `onBackgroundMessage` only calls
+  `showNotification()` once. This means the duplication — if it recurs —
+  is happening at the OS/browser push-delivery or notification-rendering
+  layer, outside anything JavaScript here can control. Don't re-litigate
+  the token/registration logic if this comes up again; it's provably not
+  the cause. Worth checking instead: iOS version quirks, and whether it
+  correlates with the app being foregrounded vs. backgrounded at delivery
+  time.
 
 ## iOS PWA stale cache
 
