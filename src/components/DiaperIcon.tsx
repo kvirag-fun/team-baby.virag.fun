@@ -24,5 +24,5 @@ export const Diaper = createLucideIcon("Diaper", [
       key: "diaper",
     },
   ],
-  ["path", { d: "M12 8v8", key: "indicator" }],
+  ["path", { d: "M12 9v7", key: "indicator" }],
 ]);
