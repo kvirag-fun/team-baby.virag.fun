@@ -1,5 +1,5 @@
 import { getToken } from "firebase/messaging";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, query, serverTimestamp, setDoc, where } from "firebase/firestore";
 import { db, messagingPromise } from "./firebase";
 import { getDeviceId } from "./device";
 
@@ -44,8 +44,16 @@ export async function registerThisDevice(): Promise<boolean> {
   const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
   if (!token) throw new Error("Firebase didn't return a push token");
 
+  const deviceId = getDeviceId();
+
+  // Remove any older tokens this same browser install registered before
+  // (e.g. from reinstalling the PWA) — otherwise both the old and new
+  // token stay valid and this one device gets every push twice.
+  const priorTokens = await getDocs(query(collection(db, "devices"), where("deviceId", "==", deviceId)));
+  await Promise.all(priorTokens.docs.filter((d) => d.id !== token).map((d) => deleteDoc(d.ref)));
+
   await setDoc(doc(db, "devices", token), {
-    deviceId: getDeviceId(),
+    deviceId,
     createdAt: serverTimestamp(),
     lastSeen: serverTimestamp(),
   });
