@@ -3,7 +3,7 @@ import { Bell, BellOff, Pencil } from "lucide-react";
 import { useBabyName } from "@/hooks/useBabyName";
 import { useNotificationsEnabled } from "@/hooks/useNotificationsEnabled";
 import { setBabyName, setNotificationsEnabled } from "@/lib/settings";
-import { hasDevicePermission, registerThisDevice } from "@/lib/notifications";
+import { hasDevicePermission, registerThisDevice, touchLastSeen } from "@/lib/notifications";
 
 export function AppHeader() {
   const babyName = useBabyName();
@@ -56,6 +56,13 @@ function NotificationsToggle() {
   const enabled = useNotificationsEnabled();
   const [busy, setBusy] = useState(false);
   const active = enabled && hasDevicePermission();
+
+  // Keeps this device's lastSeen fresh on every app open while notifications
+  // are on, so an in-use install never looks abandoned to the server-side
+  // staleness pruning in notifyOnNewEntry.
+  useEffect(() => {
+    if (active) touchLastSeen();
+  }, [active]);
 
   async function toggle() {
     setBusy(true);

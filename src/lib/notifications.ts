@@ -57,15 +57,28 @@ export async function registerThisDevice(): Promise<boolean> {
     createdAt: serverTimestamp(),
     lastSeen: serverTimestamp(),
   });
-
-  // Temporary — the duplicate-notification bug persisted after this same
-  // fix, so show every registered device doc directly to see what's
-  // actually stored (likely a stale doc under a different deviceId, e.g.
-  // from a reinstall that reset localStorage).
-  const all = await getDocs(collection(db, "devices"));
-  alert(
-    `This device: ${deviceId.slice(0, 8)}… / token ${token.slice(0, 8)}…\nAll registered:\n` +
-      all.docs.map((d) => `- ${d.id.slice(0, 8)}… deviceId=${(d.data().deviceId ?? "?").slice(0, 8)}…`).join("\n"),
-  );
   return true;
+}
+
+/** Refreshes this device's lastSeen so it doesn't look abandoned. Call this
+ * on every app load while notifications are already on — an install that's
+ * actually in use stays "fresh" forever, while one orphaned by a reinstall
+ * (its old token/deviceId can no longer be reached to delete directly, since
+ * that browser storage is gone) stops getting touched and ages out on its
+ * own via the pruning in notifyOnNewEntry, instead of needing anyone to find
+ * and delete it by hand in the Firebase console. */
+export async function touchLastSeen(): Promise<void> {
+  if (!hasDevicePermission() || !VAPID_KEY) return;
+  try {
+    const messaging = await messagingPromise;
+    if (!messaging) return;
+    const registration = await navigator.serviceWorker.register(
+      `/firebase-messaging-sw.js?${firebaseConfigQuery()}`,
+    );
+    const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+    if (!token) return;
+    await setDoc(doc(db, "devices", token), { lastSeen: serverTimestamp() }, { merge: true });
+  } catch (err) {
+    console.error("touchLastSeen failed:", err);
+  }
 }

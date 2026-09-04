@@ -19,6 +19,12 @@ const messaging = getMessaging();
 
 const FAMILY_EMAIL = "timka@team.family";
 const REGION = "europe-central2";
+// A device not touched (app opened while notifications are on) in this long
+// is treated as abandoned — e.g. from reinstalling the PWA, which resets the
+// old install's local storage and orphans its device doc with no way for
+// the client to reach back and delete it directly. Self-heals instead of
+// needing manual cleanup in the Firestore console.
+const STALE_DEVICE_MS = 3 * 24 * 60 * 60 * 1000;
 
 function describeEntry(entry) {
   const isRange = entry.type === "sleep" || entry.type === "awake";
@@ -57,7 +63,17 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
   if (settingsSnap.data()?.notificationsEnabled !== true) return { sent: 0 };
 
   const devicesSnap = await db.collection("devices").get();
-  const tokens = devicesSnap.docs.filter((d) => d.data().deviceId !== entry.deviceId).map((d) => d.id);
+  const now = Date.now();
+  const abandoned = [];
+  const tokens = [];
+  for (const d of devicesSnap.docs) {
+    const data = d.data();
+    if (data.deviceId === entry.deviceId) continue;
+    const lastSeenMs = (data.lastSeen ?? data.createdAt)?.toMillis?.() ?? 0;
+    if (now - lastSeenMs > STALE_DEVICE_MS) abandoned.push(d.ref);
+    else tokens.push(d.id);
+  }
+  await Promise.all(abandoned.map((ref) => ref.delete()));
   if (tokens.length === 0) return { sent: 0 };
 
   const response = await messaging.sendEachForMulticast({
