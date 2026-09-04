@@ -86,6 +86,17 @@ export async function touchLastSeen(): Promise<void> {
     const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
     if (!token) return;
     await upsertDeviceToken(token, getDeviceId());
+
+    // Temporary — duplicates persisted through two fixes now, so show the
+    // actual current state directly instead of guessing further.
+    const all = await getDocs(collection(db, "devices"));
+    const deviceId = getDeviceId();
+    alert(
+      `This device: ${deviceId.slice(0, 8)}… / token ${token.slice(0, 8)}…\nAll registered (${all.size}):\n` +
+        all.docs
+          .map((d) => `- token ${d.id.slice(0, 8)}… deviceId=${(d.data().deviceId ?? "?").slice(0, 8)}…`)
+          .join("\n"),
+    );
   } catch (err) {
     console.error("touchLastSeen failed:", err);
   }
