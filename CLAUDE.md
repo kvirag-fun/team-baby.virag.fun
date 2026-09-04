@@ -227,6 +227,17 @@ a live round-trip before anything renders.
 
 Don't "simplify" a subscribing hook back to a bare `onSnapshot`.
 
+## Don't put `backdrop-blur` on a fixed or sticky element
+
+iOS gives a backdrop-filtered element its own compositing layer and then
+fails to keep that layer's position in step during rubber-band scrolling.
+Symptom: the bottom nav painted as a torn band across the *middle* of the
+list, with content visible above and below it. The nav and the sticky
+activity ribbons both had it; both are now plain opaque `bg-slate-950`,
+which looks identical anyway — they were 95% opaque over a slate-950 page,
+so there was nothing to blur. The one remaining use is the delete-confirm
+scrim inside the entry sheet, which never scrolls.
+
 ## iOS PWA stale cache
 
 Even with no general service worker, an installed home-screen PWA can

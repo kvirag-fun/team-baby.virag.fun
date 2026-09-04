@@ -25,8 +25,13 @@ export function BottomNav({
     </button>
   );
 
+  // Opaque, and deliberately no backdrop-blur: iOS composites a
+  // backdrop-filtered fixed element on its own layer and paints it at a
+  // stale offset during rubber-band scrolling, which tore the nav into the
+  // middle of the page. At 95% over a slate-950 page the blur was invisible
+  // anyway.
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-800 bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-800 bg-slate-950 pb-[env(safe-area-inset-bottom)]">
       <div className="relative mx-auto flex max-w-md items-center">
         {item("timeline", ListChecks, "Log")}
         {item("calendar", CalendarDays, "Calendar")}

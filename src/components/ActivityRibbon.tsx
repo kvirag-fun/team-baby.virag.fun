@@ -102,7 +102,7 @@ function SleepAwakeRibbon({
     const Icon = isAwake ? Sun : isOvernight ? MoonStar : Moon;
     const label = isAwake ? "Awake" : isOvernight ? "Overnight" : "Nap";
     return (
-      <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
+      <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
         <button
           onClick={end}
           disabled={busy}
@@ -135,7 +135,7 @@ function SleepAwakeRibbon({
 
   const overnight = isOvernightAvailable();
   return (
-    <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
+    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className={`grid gap-2 ${overnight ? "grid-cols-3" : "grid-cols-2"}`}>
         <QuickButton icon={Moon} label="Nap" bg="bg-indigo-400" text="text-indigo-950" busy={busy} onClick={() => start("nap")} />
         {overnight && (
@@ -161,7 +161,7 @@ function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
   }
 
   return (
-    <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
+    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className="grid grid-cols-2 gap-2">
         <QuickButton icon={Breast} label="Breastmilk" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk")} />
         <QuickButton icon={BabyBottle} label="Formula" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => log("formula")} />
@@ -182,7 +182,7 @@ function SupplementRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boole
   }
 
   return (
-    <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
+    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className="grid grid-cols-2 gap-2">
         <QuickButton icon={Pill} label="Vitamin D" bg="bg-red-300" text="text-red-950" busy={busy} onClick={() => log("vitaminD")} />
         <QuickButton icon={Pill} label="Iron" bg="bg-red-800" text="text-red-50" busy={busy} onClick={() => log("iron")} />
@@ -203,7 +203,7 @@ function DiaperRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) 
   }
 
   return (
-    <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
+    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className="grid grid-cols-2 gap-2">
         <QuickButton icon={Diaper} label="Wet" bg="bg-sky-300" text="text-sky-950" busy={busy} onClick={() => log("wet")} />
         <QuickButton icon={Diaper} label="Poopy" bg="bg-amber-700" text="text-amber-50" busy={busy} onClick={() => log("poopy")} />
