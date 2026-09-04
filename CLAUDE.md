@@ -130,6 +130,15 @@ The opposite fix (data-only payload + handler that displays) also
 deduplicates, but risks iOS not delivering the push at all — don't switch
 to it without testing on a real iPhone.
 
+The worker also calls `skipWaiting()`/`clients.claim()`, without which a
+changed worker installs but stays idle until every client running the old
+one closes — on an installed PWA, effectively never, so fixing the worker
+would have meant telling both phones to delete and re-add the app every
+time. Safe only because this worker caches no assets. Note this doesn't
+help the *first* time: the version already on a phone has to release
+control on its own, so the update introducing `skipWaiting` still needs a
+reinstall (or fully closing the app) to land.
+
 ## iOS PWA stale cache
 
 Even with no general service worker, an installed home-screen PWA can

@@ -26,3 +26,12 @@ firebase.initializeApp({
 // twice. Presentation (icon, badge) is set sender-side in the webpush block
 // of functions/index.js instead.
 firebase.messaging();
+
+// By default a new worker installs but sits idle until every tab/window
+// running the old one is gone — on an installed home-screen PWA that can be
+// effectively never, so a fixed worker never takes effect without deleting
+// and re-adding the app. Take over as soon as the new version is fetched
+// instead. Safe here precisely because this worker caches nothing: there's
+// no half-old-half-new asset state for an abrupt swap to land in.
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
