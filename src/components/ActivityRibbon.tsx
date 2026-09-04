@@ -50,6 +50,15 @@ export function ActivityRibbon({
   return <SleepAwakeRibbon entries={entries} busy={busy} setBusy={setBusy} />;
 }
 
+// Overnight is only offered as a quick-start in the evening/night window
+// (18:00–05:59); outside it, only Nap makes sense as a thing to start now.
+// The entry sheet still offers all three at any hour, for logging one after
+// the fact.
+function isOvernightAvailable() {
+  const h = new Date().getHours();
+  return h >= 18 || h < 6;
+}
+
 // Nap, overnight and awake are three alternatives of one thing — the baby is
 // always in exactly one of them — so they share a page and a ribbon rather
 // than being split across two. Starting any one of them closes whichever was
@@ -123,11 +132,14 @@ function SleepAwakeRibbon({
     );
   }
 
+  const overnight = isOvernightAvailable();
   return (
     <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
-      <div className="grid grid-cols-3 gap-2">
+      <div className={`grid gap-2 ${overnight ? "grid-cols-3" : "grid-cols-2"}`}>
         <QuickButton icon={Moon} label="Nap" bg="bg-indigo-400" text="text-indigo-950" busy={busy} onClick={() => start("nap")} />
-        <QuickButton icon={MoonStar} label="Overnight" bg="bg-indigo-800" text="text-indigo-50" busy={busy} onClick={() => start("overnight")} />
+        {overnight && (
+          <QuickButton icon={MoonStar} label="Overnight" bg="bg-indigo-800" text="text-indigo-50" busy={busy} onClick={() => start("overnight")} />
+        )}
         <QuickButton icon={Sun} label="Awake" bg="bg-amber-400" text="text-amber-950" busy={busy} onClick={() => start("awake")} />
       </div>
     </div>
