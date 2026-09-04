@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { Entry } from "@/lib/types";
+import { isPointType, type Entry } from "@/lib/types";
 import { colorFor, labelFor } from "@/lib/colors";
 import { fmtTime, startOfDay } from "@/lib/time";
 
@@ -8,10 +9,22 @@ const DAY_MS = 86_400_000;
 const HOUR_LABELS = Array.from({ length: 25 }, (_, h) => h);
 
 const SWIPE_AXIS_THRESHOLD = 8;
-const SWIPE_DISTANCE_PX = 60;
+// Drag past this fraction of the width to change day/week, or flick quickly
+// a shorter distance — same feel as the Log tab's pager.
+const SWIPE_DISTANCE_FRACTION = 0.22;
 const SWIPE_VELOCITY_PX_PER_MS = 0.5;
+const SLIDE_MS = 260;
+const SLIDE_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+// The track holds [previous, current, next] side by side at 100% width each,
+// so the current one is centred by shifting a third of the track left.
+const TRACK_CENTRED_PCT = -33.3333;
+const TRACK_CENTRED = `translateX(${TRACK_CENTRED_PCT}%)`;
 
-const isPointType = (t: Entry["type"]) => t === "feed" || t === "supplement";
+function daysFor(anchor: number, mode: "day" | "week") {
+  if (mode === "day") return [anchor];
+  const weekStart = anchor - ((new Date(anchor).getDay() + 6) % 7) * DAY_MS; // Monday start
+  return Array.from({ length: 7 }, (_, i) => weekStart + i * DAY_MS);
+}
 
 function dayColumn(entries: Entry[], dayStart: number) {
   const dayEnd = dayStart + DAY_MS;
@@ -72,36 +85,75 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
   const [mode, setMode] = useState<"day" | "week">("day");
   const [anchor, setAnchor] = useState(() => startOfDay(Date.now()));
 
-  const days = useMemo(() => {
-    if (mode === "day") return [anchor];
-    const weekStart = anchor - ((new Date(anchor).getDay() + 6) % 7) * DAY_MS; // Monday start
-    return Array.from({ length: 7 }, (_, i) => weekStart + i * DAY_MS);
-  }, [mode, anchor]);
-
   const step = mode === "day" ? DAY_MS : DAY_MS * 7;
 
-  const gridRef = useRef<HTMLDivElement>(null);
+  // The previous and next day/week are rendered either side of the current
+  // one so a swipe can drag them into view under the finger, rather than the
+  // date jumping the instant the gesture is recognised.
+  const pages = useMemo(
+    () => [-1, 0, 1].map((offset) => daysFor(anchor + offset * step, mode)),
+    [anchor, step, mode],
+  );
 
-  // Swipe left/right over the grid moves to the next/previous day (or week,
-  // in week mode) — same axis-lock approach as the Log tab's pager so a
-  // vertical scroll of the page never gets mistaken for a swipe, but simpler
-  // since there's no fixed set of pages to drag between here: just detect
-  // the gesture and jump the anchor date.
+  const gridRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const animatingRef = useRef(false);
+
+  /** Animates to the adjacent day/week, then makes it the current one. */
+  function slide(direction: 1 | -1) {
+    const track = trackRef.current;
+    if (!track || animatingRef.current) return;
+    animatingRef.current = true;
+
+    track.style.transition = `transform ${SLIDE_MS}ms ${SLIDE_EASE}`;
+    track.style.transform = `translateX(${direction === 1 ? "-66.6667%" : "0%"})`;
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      // Move the anchor and recentre the track in a single commit —
+      // flushSync so the new page is in the DOM before the transform is
+      // reset, otherwise the browser paints one frame of the wrong day.
+      flushSync(() => setAnchor((a) => a + direction * step));
+      track.style.transition = "";
+      track.style.transform = TRACK_CENTRED;
+      animatingRef.current = false;
+    };
+    track.addEventListener("transitionend", finish, { once: true });
+    // transitionend doesn't fire if the transition never actually runs (a
+    // backgrounded tab, reduced-motion overrides) — never leave the track
+    // stuck off-centre.
+    window.setTimeout(finish, SLIDE_MS + 100);
+  }
+  const slideRef = useRef(slide);
+  slideRef.current = slide;
+
+  // Horizontal swipe is driven manually (touch-action is pan-y) so vertical
+  // scrolling of the page stays fully native, and only a gesture that's
+  // confidently horizontal past a small threshold starts dragging — a touch
+  // that lands on an entry block still scrolls the page normally.
   useEffect(() => {
     const el = gridRef.current;
     if (!el) return;
 
     let startX = 0;
     let startY = 0;
-    let startT = 0;
+    let lastX = 0;
+    let lastT = 0;
+    let velocity = 0; // px/ms of finger movement, most recent sample
     let axis: "x" | "y" | null = null;
 
     function onTouchStart(e: TouchEvent) {
       const t = e.touches[0];
-      startX = t.clientX;
+      startX = lastX = t.clientX;
       startY = t.clientY;
-      startT = e.timeStamp;
-      axis = null;
+      lastT = e.timeStamp;
+      velocity = 0;
+      // Ignore a touch that starts mid-animation rather than fighting it for
+      // control of the same transform.
+      axis = animatingRef.current ? "y" : null;
     }
 
     function onTouchMove(e: TouchEvent) {
@@ -112,16 +164,37 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
         if (Math.abs(dx) < SWIPE_AXIS_THRESHOLD && Math.abs(dy) < SWIPE_AXIS_THRESHOLD) return;
         axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
       }
-      if (axis === "x") e.preventDefault();
+      if (axis !== "x") return;
+
+      e.preventDefault();
+      const track = trackRef.current;
+      if (track) {
+        track.style.transition = "";
+        track.style.transform = `translateX(calc(${TRACK_CENTRED_PCT}% + ${t.clientX - startX}px))`;
+      }
+      const dt = Math.max(1, e.timeStamp - lastT);
+      velocity = (t.clientX - lastX) / dt;
+      lastX = t.clientX;
+      lastT = e.timeStamp;
     }
 
     function onTouchEnd(e: TouchEvent) {
       if (axis === "x") {
-        const t = e.changedTouches[0];
-        const dx = t.clientX - startX;
-        const dt = Math.max(1, e.timeStamp - startT);
-        if (Math.abs(dx) > SWIPE_DISTANCE_PX || Math.abs(dx) / dt > SWIPE_VELOCITY_PX_PER_MS) {
-          setAnchor((a) => a + (dx < 0 ? step : -step));
+        const dx = e.changedTouches[0].clientX - startX;
+        const width = viewportRef.current?.clientWidth || 1;
+        const flicked = Math.abs(velocity) > SWIPE_VELOCITY_PX_PER_MS;
+        // A flick decides direction by the flick itself, not by total
+        // distance — they can disagree if the finger reversed at the end.
+        const direction = (flicked ? -Math.sign(velocity) : -Math.sign(dx)) as 1 | -1;
+        if (dx !== 0 && (Math.abs(dx) / width > SWIPE_DISTANCE_FRACTION || flicked)) {
+          slideRef.current(direction);
+        } else {
+          // Not far enough — ease back to where it started.
+          const track = trackRef.current;
+          if (track) {
+            track.style.transition = `transform ${SLIDE_MS}ms ${SLIDE_EASE}`;
+            track.style.transform = TRACK_CENTRED;
+          }
         }
       }
       axis = null;
@@ -135,7 +208,7 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
       el.removeEventListener("touchmove", onTouchMove);
       el.removeEventListener("touchend", onTouchEnd);
     };
-  }, [step]);
+  }, []);
 
   return (
     <div className="flex flex-col px-4 pb-4">
@@ -152,24 +225,22 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
           ))}
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={() => setAnchor((a) => a - step)} aria-label="Previous">
+          <button onClick={() => slide(-1)} aria-label="Previous">
             <ChevronLeft className="h-5 w-5 text-slate-400" />
           </button>
           <span className="min-w-24 text-center text-sm text-slate-300">
             {new Date(anchor).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
           </span>
-          <button onClick={() => setAnchor((a) => a + step)} aria-label="Next">
+          <button onClick={() => slide(1)} aria-label="Next">
             <ChevronRight className="h-5 w-5 text-slate-400" />
           </button>
         </div>
       </div>
 
-      <div
-        ref={gridRef}
-        className="flex overflow-x-auto rounded-xl bg-slate-900/50"
-        style={{ touchAction: "pan-y" }}
-      >
-
+      <div ref={gridRef} className="flex rounded-xl bg-slate-900/50" style={{ touchAction: "pan-y" }}>
+        {/* Outside the sliding viewport — the hours are the same on every
+            day, so sliding them along with the columns just adds motion
+            that carries no information. */}
         <div className="flex w-8 shrink-0 flex-col text-right">
           {HOUR_LABELS.filter((h) => h % 3 === 0).map((h) => (
             <div key={h} className="relative h-[calc(100%/8)] text-[10px] text-slate-500" style={{ height: 720 / 8 }}>
@@ -177,10 +248,16 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
             </div>
           ))}
         </div>
-        <div className="flex flex-1" style={{ height: 720 }}>
-          {days.map((d) => (
-            <Column key={d} data={dayColumn(entries, d)} wide={mode === "day"} onEdit={onEdit} />
-          ))}
+        <div ref={viewportRef} className="flex-1 overflow-hidden">
+          <div ref={trackRef} className="flex" style={{ width: "300%", transform: TRACK_CENTRED }}>
+            {pages.map((days) => (
+              <div key={days[0]} className="flex w-1/3 shrink-0" style={{ height: 720 }}>
+                {days.map((d) => (
+                  <Column key={d} data={dayColumn(entries, d)} wide={mode === "day"} onEdit={onEdit} />
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -192,6 +269,8 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
         <Legend color="bg-emerald-700" label="Breastmilk" />
         <Legend color="bg-red-300" label="Vitamin D" />
         <Legend color="bg-red-800" label="Iron" />
+        <Legend color="bg-sky-300" label="Wet" />
+        <Legend color="bg-amber-700" label="Poopy" />
       </div>
     </div>
   );

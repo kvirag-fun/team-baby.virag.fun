@@ -1,5 +1,5 @@
 import { createEntry, updateEntry } from "./entries";
-import type { Entry, FeedType, SleepType, SupplementType } from "./types";
+import type { DiaperType, Entry, FeedType, SleepType, SupplementType } from "./types";
 
 /**
  * The currently-running entry of a type, if any (endTime === null means
@@ -19,6 +19,7 @@ export async function stopEntry(entry: Entry, endTime = Date.now()) {
     feedType: entry.feedType,
     sleepType: entry.sleepType,
     supplementType: entry.supplementType,
+    diaperType: entry.diaperType,
     amount: entry.amount,
     amountUnit: entry.amountUnit,
     note: entry.note,
@@ -37,6 +38,7 @@ export async function startSleep(entries: Entry[], sleepType: SleepType) {
     feedType: null,
     sleepType,
     supplementType: null,
+    diaperType: null,
     amount: null,
     amountUnit: null,
     note: "",
@@ -55,6 +57,7 @@ export async function startAwake(entries: Entry[]) {
     feedType: null,
     sleepType: null,
     supplementType: null,
+    diaperType: null,
     amount: null,
     amountUnit: null,
     note: "",
@@ -70,6 +73,7 @@ export async function logFeed(feedType: FeedType) {
     feedType,
     sleepType: null,
     supplementType: null,
+    diaperType: null,
     amount: null,
     amountUnit: "ml",
     note: "",
@@ -85,6 +89,23 @@ export async function logSupplement(supplementType: SupplementType) {
     feedType: null,
     sleepType: null,
     supplementType,
+    diaperType: null,
+    amount: null,
+    amountUnit: null,
+    note: "",
+  });
+}
+
+/** A diaper change is a single moment, same as feed and supplement. */
+export async function logDiaper(diaperType: DiaperType) {
+  await createEntry({
+    type: "diaper",
+    startTime: Date.now(),
+    endTime: null,
+    feedType: null,
+    sleepType: null,
+    supplementType: null,
+    diaperType,
     amount: null,
     amountUnit: null,
     note: "",

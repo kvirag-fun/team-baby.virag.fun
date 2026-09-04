@@ -156,8 +156,13 @@ via a small threshold (`SWIPE_AXIS_THRESHOLD`) before committing to
 horizontal vs. vertical, `touch-action: pan-y` on the container so native
 vertical scroll is untouched until a gesture is confidently horizontal,
 manual touchmove/touchend handling only past that point. `CalendarView.tsx`
-reuses the same axis-lock/threshold approach for simple swipe-to-navigate
-(no bounded pages to drag between, just detect-and-jump). Verify any new
+reuses the same axis-lock/threshold approach, but has no bounded set of
+pages to scroll between — the date range is infinite — so it renders
+[previous, current, next] on a 300%-wide track, drags that under the
+finger, animates to the neighbour on release, and only then moves the
+anchor date. The anchor change and the recentring of the track must land
+in the same commit (`flushSync`), or the browser paints one frame showing
+the wrong day. Verify any new
 touch gesture with simulated touch events (Playwright CDP
 `Input.dispatchTouchEvent`), not just visual screenshots or mouse-based
 interactions — mouse events don't exercise `touch-action`/touch code paths

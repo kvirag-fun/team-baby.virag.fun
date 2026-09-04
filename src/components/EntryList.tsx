@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { Moon, MoonStar, Sun, Milk, Pill } from "lucide-react";
-import type { Entry } from "@/lib/types";
+import { Moon, MoonStar, Sun, Milk, Pill, Droplet, Baby } from "lucide-react";
+import { isPointType, type Entry } from "@/lib/types";
 import { colorFor, labelFor } from "@/lib/colors";
 import { fmtDayHeading, fmtDuration, fmtTime, startOfDay } from "@/lib/time";
 
@@ -8,6 +8,7 @@ function iconFor(entry: Entry) {
   if (entry.type === "sleep") return entry.sleepType === "overnight" ? MoonStar : Moon;
   if (entry.type === "awake") return Sun;
   if (entry.type === "supplement") return Pill;
+  if (entry.type === "diaper") return entry.diaperType === "poopy" ? Baby : Droplet;
   return Milk;
 }
 
@@ -35,7 +36,7 @@ export function EntryList({ entries, onEdit }: { entries: Entry[]; onEdit: (e: E
             {dayEntries.map((entry) => {
               const c = colorFor(entry);
               const Icon = iconFor(entry);
-              const isPoint = entry.type === "feed" || entry.type === "supplement";
+              const isPoint = isPointType(entry.type);
               return (
                 <li key={entry.id}>
                   <button

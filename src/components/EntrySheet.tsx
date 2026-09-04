@@ -1,6 +1,16 @@
 import { useState } from "react";
-import { Moon, Sun, Milk, Pill, Trash2, X } from "lucide-react";
-import type { AmountUnit, Entry, EntryType, FeedType, NewEntry, SleepType, SupplementType } from "@/lib/types";
+import { Moon, Sun, Milk, Pill, Baby, Trash2, X } from "lucide-react";
+import {
+  isPointType,
+  type AmountUnit,
+  type DiaperType,
+  type Entry,
+  type EntryType,
+  type FeedType,
+  type NewEntry,
+  type SleepType,
+  type SupplementType,
+} from "@/lib/types";
 import { toInputValue, fromInputValue } from "@/lib/time";
 
 const TYPE_OPTIONS: { key: EntryType; label: string; icon: typeof Moon; active: string }[] = [
@@ -8,9 +18,8 @@ const TYPE_OPTIONS: { key: EntryType; label: string; icon: typeof Moon; active: 
   { key: "awake", label: "Awake", icon: Sun, active: "bg-amber-400 text-amber-950" },
   { key: "feed", label: "Feed", icon: Milk, active: "bg-emerald-500 text-white" },
   { key: "supplement", label: "Supplement", icon: Pill, active: "bg-red-500 text-white" },
+  { key: "diaper", label: "Diaper", icon: Baby, active: "bg-sky-500 text-white" },
 ];
-
-const POINT_TYPES: EntryType[] = ["feed", "supplement"];
 
 export function EntrySheet({
   initial,
@@ -30,6 +39,7 @@ export function EntrySheet({
   const [feedType, setFeedType] = useState<FeedType>(initial?.feedType ?? "breastmilk");
   const [sleepType, setSleepType] = useState<SleepType>(initial?.sleepType ?? "nap");
   const [supplementType, setSupplementType] = useState<SupplementType>(initial?.supplementType ?? "vitaminD");
+  const [diaperType, setDiaperType] = useState<DiaperType>(initial?.diaperType ?? "wet");
   const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount) : "");
   const [unit, setUnit] = useState<AmountUnit>(initial?.amountUnit ?? "ml");
   const [note, setNote] = useState(initial?.note ?? "");
@@ -40,7 +50,7 @@ export function EntrySheet({
     setBusy(true);
     try {
       const startTime = fromInputValue(start);
-      const isPoint = POINT_TYPES.includes(type);
+      const isPoint = isPointType(type);
       const entry: NewEntry = {
         type,
         startTime,
@@ -48,6 +58,7 @@ export function EntrySheet({
         feedType: type === "feed" ? feedType : null,
         sleepType: type === "sleep" ? sleepType : null,
         supplementType: type === "supplement" ? supplementType : null,
+        diaperType: type === "diaper" ? diaperType : null,
         amount: type === "feed" && amount !== "" ? Number(amount) : null,
         amountUnit: type === "feed" ? unit : null,
         note,
@@ -85,7 +96,10 @@ export function EntrySheet({
           </div>
 
           <div className="flex flex-col gap-4 p-4">
-          <div className="grid grid-cols-4 gap-2">
+          {/* Three across rather than one row of five: "Supplement" needs
+              the width, and five columns squeezes every label to unreadable
+              on a phone. */}
+          <div className="grid grid-cols-3 gap-2">
             {TYPE_OPTIONS.map((opt) => (
               <button
                 key={opt.key}
@@ -101,7 +115,7 @@ export function EntrySheet({
           </div>
 
           <label className="flex flex-col gap-1 text-sm text-slate-400">
-            {POINT_TYPES.includes(type) ? "Time" : "Start"}
+            {isPointType(type) ? "Time" : "Start"}
             <input
               type="datetime-local"
               value={start}
@@ -110,7 +124,7 @@ export function EntrySheet({
             />
           </label>
 
-          {!POINT_TYPES.includes(type) && (
+          {!isPointType(type) && (
             <>
               <label className="flex items-center gap-2 text-sm text-slate-300">
                 <input
@@ -236,6 +250,31 @@ export function EntrySheet({
                 }`}
               >
                 Iron
+              </button>
+            </div>
+          )}
+
+          {type === "diaper" && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setDiaperType("wet")}
+                className={`rounded-xl border py-2 text-sm font-medium ${
+                  diaperType === "wet"
+                    ? "border-transparent bg-sky-300 text-sky-950"
+                    : "border-slate-700 text-slate-400"
+                }`}
+              >
+                Wet
+              </button>
+              <button
+                onClick={() => setDiaperType("poopy")}
+                className={`rounded-xl border py-2 text-sm font-medium ${
+                  diaperType === "poopy"
+                    ? "border-transparent bg-amber-700 text-amber-50"
+                    : "border-slate-700 text-slate-400"
+                }`}
+              >
+                Poopy
               </button>
             </div>
           )}

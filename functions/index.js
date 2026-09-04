@@ -46,6 +46,9 @@ function describeEntry(entry) {
     const label = entry.supplementType === "iron" ? "Iron" : "Vitamin D";
     return `${label} logged`;
   }
+  if (entry.type === "diaper") {
+    return entry.diaperType === "poopy" ? "Poopy diaper logged" : "Wet diaper logged";
+  }
   return "New entry logged";
 }
 

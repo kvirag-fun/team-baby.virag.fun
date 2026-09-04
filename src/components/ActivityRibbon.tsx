@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Loader2, Moon, MoonStar, Sun, Milk, Pill, type LucideIcon } from "lucide-react";
+import { Loader2, Moon, MoonStar, Sun, Milk, Pill, Droplet, Baby, type LucideIcon } from "lucide-react";
 import type { Entry } from "@/lib/types";
-import { findOpenEntry, logFeed, logSupplement, startAwake, startSleep, stopEntry } from "@/lib/activity";
+import { findOpenEntry, logDiaper, logFeed, logSupplement, startAwake, startSleep, stopEntry } from "@/lib/activity";
 import { fmtDuration, fmtTime } from "@/lib/time";
 import { useTick } from "@/hooks/useTick";
 
@@ -37,7 +37,7 @@ export function ActivityRibbon({
   type,
   entries,
 }: {
-  type: "sleep" | "awake" | "feed" | "supplement";
+  type: "sleep" | "awake" | "feed" | "supplement" | "diaper";
   entries: Entry[];
 }) {
   useTick();
@@ -46,6 +46,7 @@ export function ActivityRibbon({
   if (type === "sleep") return <SleepRibbon entries={entries} busy={busy} setBusy={setBusy} />;
   if (type === "feed") return <FeedRibbon busy={busy} setBusy={setBusy} />;
   if (type === "supplement") return <SupplementRibbon busy={busy} setBusy={setBusy} />;
+  if (type === "diaper") return <DiaperRibbon busy={busy} setBusy={setBusy} />;
 
   const open = findOpenEntry(entries, "awake");
 
@@ -202,6 +203,27 @@ function SupplementRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boole
       <div className="grid grid-cols-2 gap-2">
         <QuickButton icon={Pill} label="Log Vitamin D" bg="bg-red-300" text="text-red-950" busy={busy} onClick={() => log("vitaminD")} />
         <QuickButton icon={Pill} label="Log Iron" bg="bg-red-800" text="text-red-50" busy={busy} onClick={() => log("iron")} />
+      </div>
+    </div>
+  );
+}
+
+// Diaper changes are single moments too — tap to log one at the current time.
+function DiaperRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) => void }) {
+  async function log(diaperType: "wet" | "poopy") {
+    setBusy(true);
+    try {
+      await logDiaper(diaperType);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
+      <div className="grid grid-cols-2 gap-2">
+        <QuickButton icon={Droplet} label="Log Wet" bg="bg-sky-300" text="text-sky-950" busy={busy} onClick={() => log("wet")} />
+        <QuickButton icon={Baby} label="Log Poopy" bg="bg-amber-700" text="text-amber-50" busy={busy} onClick={() => log("poopy")} />
       </div>
     </div>
   );
