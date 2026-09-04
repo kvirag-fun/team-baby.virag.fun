@@ -76,14 +76,15 @@ export function EntrySheet({
         className="max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl bg-slate-950 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 pt-4">
-          <h2 className="text-lg font-semibold">{initial ? "Edit entry" : "New entry"}</h2>
-          <button onClick={onClose} aria-label="Close">
-            <X className="h-5 w-5 text-slate-400" />
-          </button>
-        </div>
+        <div className="relative">
+          <div className="flex items-center justify-between px-4 pt-4">
+            <h2 className="text-lg font-semibold">{initial ? "Edit entry" : "New entry"}</h2>
+            <button onClick={onClose} aria-label="Close" disabled={confirmDelete}>
+              <X className="h-5 w-5 text-slate-400" />
+            </button>
+          </div>
 
-        <div className="flex flex-col gap-4 p-4">
+          <div className="flex flex-col gap-4 p-4">
           <div className="grid grid-cols-4 gap-2">
             {TYPE_OPTIONS.map((opt) => (
               <button
@@ -249,27 +250,7 @@ export function EntrySheet({
             />
           </label>
 
-          {confirmDelete ? (
-            <div className="flex flex-col gap-2 pt-2">
-              <p className="text-center text-sm text-slate-400">Delete this entry? This can't be undone.</p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setConfirmDelete(false)}
-                  disabled={busy}
-                  className="flex-1 rounded-xl border border-slate-700 py-3 font-medium text-slate-300 disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmedDelete}
-                  disabled={busy}
-                  className="flex-1 rounded-xl bg-rose-600 py-3 font-medium text-white disabled:opacity-50"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ) : (
+          {!confirmDelete && (
             <div className="flex gap-2 pt-2">
               {initial && onDelete && (
                 <button
@@ -289,7 +270,34 @@ export function EntrySheet({
               </button>
             </div>
           )}
+          </div>
+
+          {confirmDelete && (
+            <div className="absolute inset-0 rounded-t-2xl bg-slate-950/85 backdrop-blur-[1px]" />
+          )}
         </div>
+
+        {confirmDelete && (
+          <div className="flex flex-col gap-2 p-4">
+            <p className="text-center text-sm text-slate-400">Delete this entry? This can't be undone.</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={busy}
+                className="flex-1 rounded-xl border border-slate-700 py-3 font-medium text-slate-300 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmedDelete}
+                disabled={busy}
+                className="flex-1 rounded-xl bg-rose-600 py-3 font-medium text-white disabled:opacity-50"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
