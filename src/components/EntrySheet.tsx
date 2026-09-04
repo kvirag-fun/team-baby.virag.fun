@@ -34,6 +34,7 @@ export function EntrySheet({
   const [unit, setUnit] = useState<AmountUnit>(initial?.amountUnit ?? "ml");
   const [note, setNote] = useState(initial?.note ?? "");
   const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function save() {
     setBusy(true);
@@ -52,6 +53,17 @@ export function EntrySheet({
         note,
       };
       await onSave(entry);
+      onClose();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmedDelete() {
+    if (!initial || !onDelete) return;
+    setBusy(true);
+    try {
+      await onDelete(initial.id);
       onClose();
     } finally {
       setBusy(false);
@@ -237,23 +249,46 @@ export function EntrySheet({
             />
           </label>
 
-          <div className="flex gap-2 pt-2">
-            {initial && onDelete && (
+          {confirmDelete ? (
+            <div className="flex flex-col gap-2 pt-2">
+              <p className="text-center text-sm text-slate-400">Delete this entry? This can't be undone.</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={busy}
+                  className="flex-1 rounded-xl border border-slate-700 py-3 font-medium text-slate-300 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmedDelete}
+                  disabled={busy}
+                  className="flex-1 rounded-xl bg-rose-600 py-3 font-medium text-white disabled:opacity-50"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2 pt-2">
+              {initial && onDelete && (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  disabled={busy}
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-rose-900 px-4 py-3 text-rose-400 disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
               <button
-                onClick={() => onDelete(initial.id).then(onClose)}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-rose-900 px-4 py-3 text-rose-400"
+                onClick={save}
+                disabled={busy}
+                className="flex-1 rounded-xl bg-indigo-500 py-3 font-medium text-white disabled:opacity-50"
               >
-                <Trash2 className="h-4 w-4" />
+                Save
               </button>
-            )}
-            <button
-              onClick={save}
-              disabled={busy}
-              className="flex-1 rounded-xl bg-indigo-500 py-3 font-medium text-white disabled:opacity-50"
-            >
-              Save
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
