@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Loader2, Moon, MoonStar, Sun, Milk, Pill, Droplet, Baby, type LucideIcon } from "lucide-react";
+import { Loader2, Moon, MoonStar, Sun, Milk, Pill, type LucideIcon } from "lucide-react";
 import type { Entry } from "@/lib/types";
+import { Diaper } from "./DiaperIcon";
 import { findOpenEntry, logDiaper, logFeed, logSupplement, startAwake, startSleep, stopEntry } from "@/lib/activity";
 import { fmtDuration, fmtTime } from "@/lib/time";
 import { useTick } from "@/hooks/useTick";
@@ -222,8 +223,8 @@ function DiaperRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) 
   return (
     <div className="sticky top-0 z-10 bg-slate-950/95 px-4 pb-3 pt-3 backdrop-blur">
       <div className="grid grid-cols-2 gap-2">
-        <QuickButton icon={Droplet} label="Log Wet" bg="bg-sky-300" text="text-sky-950" busy={busy} onClick={() => log("wet")} />
-        <QuickButton icon={Baby} label="Log Poopy" bg="bg-amber-700" text="text-amber-50" busy={busy} onClick={() => log("poopy")} />
+        <QuickButton icon={Diaper} label="Log Wet" bg="bg-sky-300" text="text-sky-950" busy={busy} onClick={() => log("wet")} />
+        <QuickButton icon={Diaper} label="Log Poopy" bg="bg-amber-700" text="text-amber-50" busy={busy} onClick={() => log("poopy")} />
       </div>
     </div>
   );

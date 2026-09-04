@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Moon, Sun, Milk, Pill, Baby, Trash2, X } from "lucide-react";
+import { Moon, Sun, Milk, Pill, Trash2, X } from "lucide-react";
+import { Diaper } from "./DiaperIcon";
 import {
   isPointType,
   type AmountUnit,
@@ -18,7 +19,7 @@ const TYPE_OPTIONS: { key: EntryType; label: string; icon: typeof Moon; active: 
   { key: "awake", label: "Awake", icon: Sun, active: "bg-amber-400 text-amber-950" },
   { key: "feed", label: "Feed", icon: Milk, active: "bg-emerald-500 text-white" },
   { key: "supplement", label: "Supplement", icon: Pill, active: "bg-red-500 text-white" },
-  { key: "diaper", label: "Diaper", icon: Baby, active: "bg-sky-500 text-white" },
+  { key: "diaper", label: "Diaper", icon: Diaper, active: "bg-sky-500 text-white" },
 ];
 
 export function EntrySheet({
