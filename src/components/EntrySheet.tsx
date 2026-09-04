@@ -13,6 +13,7 @@ import {
   type SupplementType,
 } from "@/lib/types";
 import { toInputValue, fromInputValue } from "@/lib/time";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 // Nap, overnight and awake are three alternatives of one kind rather than
 // separate kinds, so they share a single button here and are chosen between
@@ -68,6 +69,7 @@ export function EntrySheet({
   const [note, setNote] = useState(initial?.note ?? "");
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  useLockBodyScroll();
 
   async function save() {
     setBusy(true);

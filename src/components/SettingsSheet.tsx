@@ -11,6 +11,7 @@ import {
   EMOJI_MAX_LENGTH,
   ROLE_MAX_LENGTH,
 } from "@/lib/role";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 export function SettingsSheet({
   babyName,
@@ -29,6 +30,7 @@ export function SettingsSheet({
   const [avatarDraft, setAvatarDraft] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  useLockBodyScroll();
   const shownAvatar = avatarDraft ?? avatar;
 
   async function pickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
