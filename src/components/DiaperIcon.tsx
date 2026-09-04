@@ -9,7 +9,17 @@ import { createLucideIcon } from "lucide-react";
 // hip, tapering to a rounded bottom. Earlier attempts that came to a point
 // read as a funnel or an arrow, and a symmetric pinched-waist version read
 // as an hourglass — the rounded bottom and the flaps are what make it
-// legible as a diaper, and both survive down to ~16px.
+// legible as a diaper, and both survive down to the 18px used in the log
+// list.
+//
+// The centre strip is the wetness indicator real diapers have: it runs the
+// full length from the waistband down, yellow when dry and turning blue from
+// the bottom as it gets wet — drawn here caught partway.
+// Those two are the only hardcoded colours in the app's iconography — every
+// other icon is monochrome and inherits its colour from the entry's own
+// palette. The strip has to keep its real colours to mean anything, so it
+// overrides `stroke` per path; it's drawn thicker than the outline so it
+// still reads as two tones at small sizes rather than a single dark dash.
 export const Diaper = createLucideIcon("Diaper", [
   [
     "path",
@@ -18,4 +28,6 @@ export const Diaper = createLucideIcon("Diaper", [
       key: "diaper",
     },
   ],
+  ["path", { d: "M12 7.5v6", stroke: "#facc15", strokeWidth: "3", key: "indicator-dry" }],
+  ["path", { d: "M12 13.5v3", stroke: "#2563eb", strokeWidth: "3", key: "indicator-wet" }],
 ]);
