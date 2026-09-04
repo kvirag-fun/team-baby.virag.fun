@@ -26,6 +26,15 @@ Read this before touching auth, Firestore rules, or `functions/`.
    migrated, pending the user's real emails and a shared-vs-separate
    password decision. Don't assume this is finished.
 
+5. Two settings live in different places on purpose: the baby's name is
+   shared (`settings/app` in Firestore, both phones see one value), while
+   the user's role — "Dad", "Mom", "Grandma", free text, sent along so a
+   notification can say who logged it — is per browser install
+   (`localStorage`, `src/lib/role.ts`). Don't "fix" the role by moving it
+   into the shared settings doc: it describes whoever holds *that* phone,
+   and both phones share one account, so a shared field would just have the
+   two of them overwriting each other.
+
 ## Cloud Function (`functions/index.js`) — IAM roles the runtime service
 account (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`) needs.
 Missing any of these fails differently, discovered the hard way over many

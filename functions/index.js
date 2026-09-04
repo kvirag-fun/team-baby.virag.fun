@@ -79,12 +79,22 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
   await Promise.all(abandoned.map((ref) => ref.delete()));
   if (tokens.length === 0) return { sent: 0 };
 
+  // Free text typed by whoever set up the sending phone ("Dad", "Grandma").
+  // Trimmed and capped rather than validated against a list — it's shown to
+  // the family, and only the family account can reach this function.
+  const role = typeof entry.role === "string" ? entry.role.trim().slice(0, 24) : "";
+
   const response = await messaging.sendEachForMulticast({
     tokens,
     // Title is the actual message, not "Team Baby" — iOS already shows its
     // own "from Team Baby" attribution line for web-push notifications, so
     // repeating the app name as the title just duplicated it.
-    notification: { title: describeEntry(entry) },
+    notification: {
+      title: describeEntry(entry),
+      // Only present when the sending phone has a role set, so an unset
+      // role means a plain one-line banner rather than an empty second line.
+      ...(role ? { body: `Logged by ${role}` } : {}),
+    },
     // The service worker displays nothing itself (see the comment there), so
     // presentation has to come from the message — the SDK's own auto-display
     // reads these.
