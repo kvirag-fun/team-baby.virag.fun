@@ -38,6 +38,29 @@ export async function stopEntry(entry: Entry, endTime = Date.now()) {
   });
 }
 
+/** Promotes a running nap to an overnight, or demotes it back. An update to
+ * the stretch already open rather than a new entry, so its start time is kept,
+ * the log doesn't gain a row, and no notification fires — only creating an
+ * entry notifies. The whole stretch is relabelled: going down at 19:00 and
+ * promoting at 21:00 means she has been down for the night since 19:00. */
+export async function setSleepType(entry: Entry, sleepType: SleepType) {
+  await updateEntry(entry.id, {
+    type: entry.type,
+    startTime: entry.startTime,
+    endTime: entry.endTime,
+    feedType: entry.feedType,
+    feedSide: entry.feedSide,
+    bottleContent: entry.bottleContent,
+    sleepType,
+    supplementType: entry.supplementType,
+    diaperType: entry.diaperType,
+    bathType: entry.bathType,
+    amount: entry.amount,
+    amountUnit: entry.amountUnit,
+    note: entry.note,
+  });
+}
+
 /** Starts a sleep stretch now; if awake is running, closes it first. */
 export async function startSleep(entries: Entry[], sleepType: SleepType) {
   const now = Date.now();
