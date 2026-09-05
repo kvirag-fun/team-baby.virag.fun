@@ -73,7 +73,10 @@ export function EntrySheet({
   const [ongoing, setOngoing] = useState(initial ? initial.endTime == null : false);
   const [end, setEnd] = useState(toInputValue(initial?.endTime ?? Date.now()));
   const [feedType, setFeedType] = useState<FeedType>(initial?.feedType ?? "breastmilk");
-  const [feedSide, setFeedSide] = useState<FeedSide | null>(initial?.feedSide ?? null);
+  // A boob feed always came from one side or the other, so the sheet starts
+  // with one picked rather than offering "neither". Older entries logged
+  // before sides were tracked open on the default too.
+  const [feedSide, setFeedSide] = useState<FeedSide>(initial?.feedSide ?? "left");
   const [supplementType, setSupplementType] = useState<SupplementType>(initial?.supplementType ?? "vitaminD");
   const [diaperType, setDiaperType] = useState<DiaperType>(initial?.diaperType ?? "wet");
   const [bathType, setBathType] = useState<BathType>(initial?.bathType ?? "bath");
@@ -236,10 +239,7 @@ export function EntrySheet({
                   {(["left", "right"] as const).map((s) => (
                     <button
                       key={s}
-                      // Tapping the chosen side again clears it, for a feed
-                      // logged before sides were tracked or where it wasn't
-                      // noted.
-                      onClick={() => setFeedSide(feedSide === s ? null : s)}
+                      onClick={() => setFeedSide(s)}
                       className={`rounded-xl border py-2 text-sm font-medium capitalize ${
                         feedSide === s ? "border-transparent bg-emerald-700 text-emerald-50" : "border-slate-700 text-slate-400"
                       }`}
