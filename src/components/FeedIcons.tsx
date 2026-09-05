@@ -5,7 +5,7 @@ import { createLucideIcon } from "lucide-react";
 // same 24x24 grid with the same stroke width, caps and joins as the icons
 // they sit beside.
 
-/** Breastmilk. A teardrop with the nipple at its centre: the rounder
+/** Boob (breastmilk). A teardrop with the nipple at its centre: the rounder
  * silhouettes tried first read as a ball or an eye at list size, and the ones
  * with the nipple bumped out of the outline came out looking bitten. */
 export const Breast = createLucideIcon("Breast", [
@@ -24,7 +24,7 @@ export const Breast = createLucideIcon("Breast", [
   ["circle", { cx: "12", cy: "16.85", r: "2.26", key: "nipple" }],
 ]);
 
-/** Formula. A baby bottle rather than a generic one: what makes it read as
+/** Bottle (formula). A baby bottle rather than a generic one: what makes it read as
  * a baby's is the pointed teat and the wide collar under it — a narrow neck
  * looks like a lab flask. The rounded base and the two measurement marks do
  * the rest; without the marks it reads as a lightbulb. */

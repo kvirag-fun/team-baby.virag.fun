@@ -72,5 +72,5 @@ export function labelFor(entry: Described) {
   if (entry.type === "awake") return "Awake";
   if (entry.type === "supplement") return entry.supplementType === "iron" ? "Iron" : "Vitamin D";
   if (entry.type === "diaper") return entry.diaperType === "poopy" ? "Poopy" : "Wet";
-  return entry.feedType === "breastmilk" ? "Breastmilk" : "Formula";
+  return entry.feedType === "breastmilk" ? "Boob" : "Bottle";
 }

@@ -202,7 +202,7 @@ export function EntrySheet({
                       : "border-slate-700 text-slate-400"
                   }`}
                 >
-                  Breastmilk
+                  Boob
                 </button>
                 <button
                   onClick={() => setFeedType("formula")}
@@ -212,7 +212,7 @@ export function EntrySheet({
                       : "border-slate-700 text-slate-400"
                   }`}
                 >
-                  Formula
+                  Bottle
                 </button>
               </div>
               <div className="flex gap-2">

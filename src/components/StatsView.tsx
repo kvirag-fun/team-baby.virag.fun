@@ -108,8 +108,8 @@ export function StatsView({ entries }: { entries: Entry[] }) {
       <div className="grid grid-cols-3 gap-2">
         <Stat label="Sleep" value={`${totals.sleep.toFixed(1)}h`} color="text-indigo-300" />
         <Stat label="Awake" value={`${totals.awake.toFixed(1)}h`} color="text-amber-300" />
-        <Stat label="Breastmilk" value={String(totals.breastmilk)} color="text-emerald-500" />
-        <Stat label="Formula" value={String(totals.formula)} color="text-emerald-300" />
+        <Stat label="Boob" value={String(totals.breastmilk)} color="text-emerald-500" />
+        <Stat label="Bottle" value={String(totals.formula)} color="text-emerald-300" />
         <Stat label="Wet" value={String(totals.wet)} color="text-sky-300" />
         <Stat label="Poopy" value={String(totals.poopy)} color="text-amber-600" />
         <Stat label="Vitamin D" value={String(totals.vitaminD)} color="text-red-300" />
@@ -143,8 +143,8 @@ export function StatsView({ entries }: { entries: Entry[] }) {
               <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
               <Legend {...LEGEND_PROPS} />
-              <Bar dataKey="breastmilk" name="Breastmilk" stackId="f" fill="#047857" />
-              <Bar dataKey="formula" name="Formula" stackId="f" fill="#6ee7b7" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="breastmilk" name="Boob" stackId="f" fill="#047857" />
+              <Bar dataKey="formula" name="Bottle" stackId="f" fill="#6ee7b7" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

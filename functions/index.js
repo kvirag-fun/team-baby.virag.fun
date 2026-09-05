@@ -38,7 +38,7 @@ function describeEntry(entry) {
     return done ? "Awake time logged" : "Awake started";
   }
   if (entry.type === "feed") {
-    const label = entry.feedType === "breastmilk" ? "Breastmilk" : "Formula";
+    const label = entry.feedType === "breastmilk" ? "Boob" : "Bottle";
     const amount = entry.amount ? ` (${entry.amount}${entry.amountUnit ?? ""})` : "";
     return `${label} logged${amount}`;
   }

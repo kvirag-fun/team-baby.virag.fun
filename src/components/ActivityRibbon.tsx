@@ -163,8 +163,8 @@ function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
   return (
     <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className="grid grid-cols-2 gap-2">
-        <QuickButton icon={Breast} label="Breastmilk" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk")} />
-        <QuickButton icon={BabyBottle} label="Formula" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => log("formula")} />
+        <QuickButton icon={Breast} label="Boob" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk")} />
+        <QuickButton icon={BabyBottle} label="Bottle" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => log("formula")} />
       </div>
     </div>
   );
