@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { isPointType, type Entry } from "@/lib/types";
 import { colorFor, labelFor } from "@/lib/colors";
 import { fmtTime, startOfDay } from "@/lib/time";
+import { useTick } from "@/hooks/useTick";
 
 const DAY_MS = 86_400_000;
 const HOUR_LABELS = Array.from({ length: 25 }, (_, h) => h);
@@ -98,6 +99,10 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
   const [mode, setMode] = useState<"day" | "week">("day");
   const [anchor, setAnchor] = useState(() => startOfDay(Date.now()));
 
+  // Keeps "today" honest if the calendar is left open across midnight.
+  useTick(60_000);
+  const today = startOfDay(Date.now());
+
   const step = mode === "day" ? DAY_MS : DAY_MS * 7;
 
   // The previous and next day/week are rendered either side of the current
@@ -107,6 +112,12 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
     () => [-1, 0, 1].map((offset) => daysFor(anchor + offset * step, mode)),
     [anchor, step, mode],
   );
+
+  // Whether today is already on screen — in week mode that's anywhere in the
+  // visible week. Compared as whole days so a clock change can't make a week
+  // built from fixed-length days miss it by an hour.
+  const shown = daysFor(anchor, mode);
+  const showingToday = today >= startOfDay(shown[0]) && today <= startOfDay(shown[shown.length - 1]);
 
   const gridRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -225,17 +236,29 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
 
   return (
     <div className="flex flex-col px-4 pb-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex overflow-hidden rounded-lg border border-slate-700">
-          {(["day", "week"] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              className={`px-3 py-1.5 text-sm capitalize ${mode === m ? "bg-slate-700 text-white" : "text-slate-400"}`}
-            >
-              {m}
-            </button>
-          ))}
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="flex overflow-hidden rounded-lg border border-slate-700">
+            {(["day", "week"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`px-3 py-1.5 text-sm capitalize ${mode === m ? "bg-slate-700 text-white" : "text-slate-400"}`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+          {/* Dimmed rather than hidden when today is already on screen, so the
+              header doesn't reflow every time you swipe onto or off today. */}
+          <button
+            onClick={() => setAnchor(startOfDay(Date.now()))}
+            className={`rounded-lg border border-slate-700 px-3 py-1.5 text-sm ${
+              showingToday ? "text-slate-600" : "text-slate-300"
+            }`}
+          >
+            Today
+          </button>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={() => slide(-1)} aria-label="Previous">
