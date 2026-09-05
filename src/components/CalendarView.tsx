@@ -286,7 +286,7 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
         <Legend color="bg-red-800" label="Iron" type="supplement" />
         <Legend color="bg-fuchsia-500" label="Butt" type="bath" />
         <Legend color="bg-fuchsia-300" label="Body" type="bath" />
-        <Legend color="bg-fuchsia-800" label="Hair wash" type="bath" />
+        <Legend color="bg-fuchsia-800" label="Hair" type="bath" />
       </div>
     </div>
   );

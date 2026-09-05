@@ -36,7 +36,7 @@ const TYPE_OPTIONS: { key: Kind; label: string; icon: typeof SunMoon; active: st
 const BATH_KINDS: { key: BathType; label: string; active: string }[] = [
   { key: "butt", label: "Butt", active: "bg-fuchsia-500 text-fuchsia-50" },
   { key: "bath", label: "Body", active: "bg-fuchsia-300 text-fuchsia-950" },
-  { key: "hairWash", label: "Hair wash", active: "bg-fuchsia-800 text-fuchsia-50" },
+  { key: "hairWash", label: "Hair", active: "bg-fuchsia-800 text-fuchsia-50" },
 ];
 
 const SLEEP_KINDS: { key: SleepKind; label: string; active: string }[] = [
