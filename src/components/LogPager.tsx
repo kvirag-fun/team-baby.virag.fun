@@ -6,11 +6,12 @@ import { EntryList } from "./EntryList";
 // A page can cover more than one entry type: nap, overnight and awake are
 // three alternatives of the same thing (the baby is always in exactly one of
 // them), so they share one page rather than being split across two.
-const PAGES: { key: "sleep" | "feed" | "supplement" | "diaper"; label: string; dot: string; types: EntryType[] }[] = [
+const PAGES: { key: "sleep" | "feed" | "supplement" | "diaper" | "bath"; label: string; dot: string; types: EntryType[] }[] = [
   { key: "sleep", label: "Sleep & awake", dot: "bg-indigo-400", types: ["sleep", "awake"] },
   { key: "feed", label: "Feed", dot: "bg-emerald-400", types: ["feed"] },
   { key: "diaper", label: "Diapers", dot: "bg-sky-400", types: ["diaper"] },
   { key: "supplement", label: "Supplements", dot: "bg-red-400", types: ["supplement"] },
+  { key: "bath", label: "Bath", dot: "bg-fuchsia-400", types: ["bath"] },
 ];
 
 const SWIPE_AXIS_THRESHOLD = 8;

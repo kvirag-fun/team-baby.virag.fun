@@ -5,6 +5,7 @@ import { colorFor, labelFor } from "@/lib/colors";
 import { fmtDayHeading, fmtDuration, fmtTime, startOfDay } from "@/lib/time";
 import { Diaper, Poop } from "./DiaperIcon";
 import { BabyBottle, Breast } from "./FeedIcons";
+import { BabyFace, Butt, HairWash } from "./BathIcons";
 
 // Vitamin D and iron share an icon and are told apart by colour. Sleep, feed
 // and diaper each give their sub-types their own, since nap/overnight,
@@ -14,6 +15,10 @@ function iconFor(entry: Entry) {
   if (entry.type === "awake") return Sun;
   if (entry.type === "supplement") return Pill;
   if (entry.type === "diaper") return entry.diaperType === "poopy" ? Poop : Diaper;
+  if (entry.type === "bath") {
+    if (entry.bathType === "butt") return Butt;
+    return entry.bathType === "hairWash" ? HairWash : BabyFace;
+  }
   return entry.feedType === "formula" ? BabyBottle : Breast;
 }
 

@@ -1,5 +1,5 @@
 import { createEntry, updateEntry } from "./entries";
-import type { DiaperType, Entry, FeedType, SleepType, SupplementType } from "./types";
+import type { BathType, DiaperType, Entry, FeedType, SleepType, SupplementType } from "./types";
 
 /**
  * The currently-running entry of a type, if any (endTime === null means
@@ -20,6 +20,7 @@ export async function stopEntry(entry: Entry, endTime = Date.now()) {
     sleepType: entry.sleepType,
     supplementType: entry.supplementType,
     diaperType: entry.diaperType,
+    bathType: entry.bathType,
     amount: entry.amount,
     amountUnit: entry.amountUnit,
     note: entry.note,
@@ -39,6 +40,7 @@ export async function startSleep(entries: Entry[], sleepType: SleepType) {
     sleepType,
     supplementType: null,
     diaperType: null,
+    bathType: null,
     amount: null,
     amountUnit: null,
     note: "",
@@ -58,6 +60,7 @@ export async function startAwake(entries: Entry[]) {
     sleepType: null,
     supplementType: null,
     diaperType: null,
+    bathType: null,
     amount: null,
     amountUnit: null,
     note: "",
@@ -74,6 +77,7 @@ export async function logFeed(feedType: FeedType) {
     sleepType: null,
     supplementType: null,
     diaperType: null,
+    bathType: null,
     amount: null,
     amountUnit: "ml",
     note: "",
@@ -90,6 +94,7 @@ export async function logSupplement(supplementType: SupplementType) {
     sleepType: null,
     supplementType,
     diaperType: null,
+    bathType: null,
     amount: null,
     amountUnit: null,
     note: "",
@@ -106,6 +111,24 @@ export async function logDiaper(diaperType: DiaperType) {
     sleepType: null,
     supplementType: null,
     diaperType,
+    bathType: null,
+    amount: null,
+    amountUnit: null,
+    note: "",
+  });
+}
+
+/** A bath, a butt wash or a hair wash — a single moment, same as the rest. */
+export async function logBath(bathType: BathType) {
+  await createEntry({
+    type: "bath",
+    startTime: Date.now(),
+    endTime: null,
+    feedType: null,
+    sleepType: null,
+    supplementType: null,
+    diaperType: null,
+    bathType,
     amount: null,
     amountUnit: null,
     note: "",

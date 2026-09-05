@@ -49,6 +49,10 @@ function describeEntry(entry) {
   if (entry.type === "diaper") {
     return entry.diaperType === "poopy" ? "Poopy diaper logged" : "Wet diaper logged";
   }
+  if (entry.type === "bath") {
+    if (entry.bathType === "butt") return "Butt wash logged";
+    return entry.bathType === "hairWash" ? "Hair wash logged" : "Bath logged";
+  }
   return "New entry logged";
 }
 

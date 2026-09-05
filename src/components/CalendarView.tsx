@@ -28,13 +28,15 @@ function daysFor(anchor: number, mode: "day" | "week") {
 
 // Point entries are single marks on the grid, so shape carries as much as
 // colour does at this size: circle for a feed, square for a supplement,
-// diamond for a diaper. The diamond is a rotated square set slightly smaller,
-// since rotating one to 45° grows its silhouette by its diagonal and it would
-// otherwise sit noticeably larger than the other two.
+// diamond for a diaper, triangle for a bath. The diamond is a rotated square
+// set slightly smaller, since rotating one to 45° grows its silhouette by its
+// diagonal; the triangle is drawn a little larger because clipping a square
+// to one leaves it with half the area.
 const POINT_SHAPE: Partial<Record<Entry["type"], string>> = {
   feed: "h-2.5 w-2.5 rounded-full",
   supplement: "h-2.5 w-2.5 rounded-[2px]",
   diaper: "h-2 w-2 rotate-45",
+  bath: "h-3 w-3 [clip-path:polygon(50%_0%,100%_100%,0%_100%)]",
 };
 
 function dayColumn(entries: Entry[], dayStart: number) {
@@ -282,6 +284,9 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
         <Legend color="bg-amber-700" label="Poopy" type="diaper" />
         <Legend color="bg-red-300" label="Vitamin D" type="supplement" />
         <Legend color="bg-red-800" label="Iron" type="supplement" />
+        <Legend color="bg-fuchsia-500" label="Butt" type="bath" />
+        <Legend color="bg-fuchsia-300" label="Bath" type="bath" />
+        <Legend color="bg-fuchsia-800" label="Hair wash" type="bath" />
       </div>
     </div>
   );

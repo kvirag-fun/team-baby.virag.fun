@@ -49,6 +49,27 @@ export const COLORS = {
     ring: "ring-sky-200",
     dot: "#7dd3fc",
   },
+  // Fuchsia for washing: every other hue is taken, and the near ones that
+  // aren't — teal beside feed's emerald, violet beside sleep's indigo —
+  // would be hard to tell apart at the size the calendar draws them.
+  bathFull: {
+    bg: "bg-fuchsia-300",
+    text: "text-fuchsia-950",
+    ring: "ring-fuchsia-200",
+    dot: "#f0abfc",
+  },
+  bathButt: {
+    bg: "bg-fuchsia-500",
+    text: "text-fuchsia-50",
+    ring: "ring-fuchsia-400",
+    dot: "#d946ef",
+  },
+  bathHair: {
+    bg: "bg-fuchsia-800",
+    text: "text-fuchsia-50",
+    ring: "ring-fuchsia-600",
+    dot: "#86198f",
+  },
   diaperPoopy: {
     bg: "bg-amber-700",
     text: "text-amber-50",
@@ -57,13 +78,17 @@ export const COLORS = {
   },
 } as const;
 
-type Described = Pick<Entry, "type" | "feedType" | "sleepType" | "supplementType" | "diaperType">;
+type Described = Pick<Entry, "type" | "feedType" | "sleepType" | "supplementType" | "diaperType" | "bathType">;
 
 export function colorFor(entry: Described) {
   if (entry.type === "sleep") return entry.sleepType === "overnight" ? COLORS.sleepOvernight : COLORS.sleepNap;
   if (entry.type === "awake") return COLORS.awake;
   if (entry.type === "supplement") return entry.supplementType === "iron" ? COLORS.supplementIron : COLORS.supplementVitaminD;
   if (entry.type === "diaper") return entry.diaperType === "poopy" ? COLORS.diaperPoopy : COLORS.diaperWet;
+  if (entry.type === "bath") {
+    if (entry.bathType === "butt") return COLORS.bathButt;
+    return entry.bathType === "hairWash" ? COLORS.bathHair : COLORS.bathFull;
+  }
   return entry.feedType === "breastmilk" ? COLORS.feedBreastmilk : COLORS.feedFormula;
 }
 
@@ -72,5 +97,9 @@ export function labelFor(entry: Described) {
   if (entry.type === "awake") return "Awake";
   if (entry.type === "supplement") return entry.supplementType === "iron" ? "Iron" : "Vitamin D";
   if (entry.type === "diaper") return entry.diaperType === "poopy" ? "Poopy" : "Wet";
+  if (entry.type === "bath") {
+    if (entry.bathType === "butt") return "Butt";
+    return entry.bathType === "hairWash" ? "Hair wash" : "Bath";
+  }
   return entry.feedType === "breastmilk" ? "Boob" : "Bottle";
 }

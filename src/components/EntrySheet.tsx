@@ -2,9 +2,11 @@ import { useState } from "react";
 import { SunMoon, Pill, Trash2, X } from "lucide-react";
 import { Diaper } from "./DiaperIcon";
 import { Breast } from "./FeedIcons";
+import { BabyFace, Butt, HairWash } from "./BathIcons";
 import {
   isPointType,
   type AmountUnit,
+  type BathType,
   type DiaperType,
   type Entry,
   type EntryType,
@@ -20,7 +22,7 @@ import { useSheetScrollLock } from "@/hooks/useSheetScrollLock";
 // separate kinds, so they share a single button here and are chosen between
 // below — matching how the log page presents them. Its icon is a moon and a
 // sun in one, since it covers both.
-type Kind = "sleep" | "feed" | "diaper" | "supplement";
+type Kind = "sleep" | "feed" | "diaper" | "supplement" | "bath";
 type SleepKind = SleepType | "awake";
 
 const TYPE_OPTIONS: { key: Kind; label: string; icon: typeof SunMoon; active: string }[] = [
@@ -28,6 +30,13 @@ const TYPE_OPTIONS: { key: Kind; label: string; icon: typeof SunMoon; active: st
   { key: "feed", label: "Feed", icon: Breast, active: "bg-emerald-500 text-white" },
   { key: "diaper", label: "Diaper", icon: Diaper, active: "bg-sky-500 text-white" },
   { key: "supplement", label: "Supplement", icon: Pill, active: "bg-red-500 text-white" },
+  { key: "bath", label: "Bath", icon: BabyFace, active: "bg-fuchsia-500 text-white" },
+];
+
+const BATH_KINDS: { key: BathType; label: string; icon: typeof BabyFace; active: string }[] = [
+  { key: "butt", label: "Butt", icon: Butt, active: "bg-fuchsia-500 text-fuchsia-50" },
+  { key: "bath", label: "Bath", icon: BabyFace, active: "bg-fuchsia-300 text-fuchsia-950" },
+  { key: "hairWash", label: "Hair wash", icon: HairWash, active: "bg-fuchsia-800 text-fuchsia-50" },
 ];
 
 const SLEEP_KINDS: { key: SleepKind; label: string; active: string }[] = [
@@ -65,6 +74,7 @@ export function EntrySheet({
   const [feedType, setFeedType] = useState<FeedType>(initial?.feedType ?? "breastmilk");
   const [supplementType, setSupplementType] = useState<SupplementType>(initial?.supplementType ?? "vitaminD");
   const [diaperType, setDiaperType] = useState<DiaperType>(initial?.diaperType ?? "wet");
+  const [bathType, setBathType] = useState<BathType>(initial?.bathType ?? "bath");
   const [amount, setAmount] = useState(initial?.amount != null ? String(initial.amount) : "");
   const [unit, setUnit] = useState<AmountUnit>(initial?.amountUnit ?? "ml");
   const [note, setNote] = useState(initial?.note ?? "");
@@ -85,6 +95,7 @@ export function EntrySheet({
         sleepType: type === "sleep" ? (sleepKind as SleepType) : null,
         supplementType: type === "supplement" ? supplementType : null,
         diaperType: type === "diaper" ? diaperType : null,
+        bathType: type === "bath" ? bathType : null,
         amount: type === "feed" && amount !== "" ? Number(amount) : null,
         amountUnit: type === "feed" ? unit : null,
         note,
@@ -293,6 +304,23 @@ export function EntrySheet({
               >
                 Poopy
               </button>
+            </div>
+          )}
+
+          {type === "bath" && (
+            <div className="grid grid-cols-3 gap-2">
+              {BATH_KINDS.map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setBathType(opt.key)}
+                  className={`flex flex-col items-center gap-1 rounded-xl border py-2 text-sm font-medium ${
+                    bathType === opt.key ? `border-transparent ${opt.active}` : "border-slate-700 text-slate-400"
+                  }`}
+                >
+                  <opt.icon className="h-4 w-4" />
+                  {opt.label}
+                </button>
+              ))}
             </div>
           )}
 

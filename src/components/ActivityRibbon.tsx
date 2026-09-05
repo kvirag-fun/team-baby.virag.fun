@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Loader2, Moon, MoonStar, Sun, Pill, type LucideIcon } from "lucide-react";
 import type { Entry } from "@/lib/types";
 import { Diaper, Poop } from "./DiaperIcon";
+import { BabyFace, Butt, HairWash } from "./BathIcons";
 import { BabyBottle, Breast } from "./FeedIcons";
-import { findOpenEntry, logDiaper, logFeed, logSupplement, startAwake, startSleep, stopEntry } from "@/lib/activity";
+import { findOpenEntry, logBath, logDiaper, logFeed, logSupplement, startAwake, startSleep, stopEntry } from "@/lib/activity";
 import { fmtDuration, fmtTime } from "@/lib/time";
 import { useTick } from "@/hooks/useTick";
 
@@ -39,7 +40,7 @@ export function ActivityRibbon({
   type,
   entries,
 }: {
-  type: "sleep" | "feed" | "supplement" | "diaper";
+  type: "sleep" | "feed" | "supplement" | "diaper" | "bath";
   entries: Entry[];
 }) {
   useTick();
@@ -48,6 +49,7 @@ export function ActivityRibbon({
   if (type === "feed") return <FeedRibbon busy={busy} setBusy={setBusy} />;
   if (type === "supplement") return <SupplementRibbon busy={busy} setBusy={setBusy} />;
   if (type === "diaper") return <DiaperRibbon busy={busy} setBusy={setBusy} />;
+  if (type === "bath") return <BathRibbon busy={busy} setBusy={setBusy} />;
   return <SleepAwakeRibbon entries={entries} busy={busy} setBusy={setBusy} />;
 }
 
@@ -207,6 +209,29 @@ function DiaperRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) 
       <div className="grid grid-cols-2 gap-2">
         <QuickButton icon={Diaper} label="Wet" bg="bg-sky-300" text="text-sky-950" busy={busy} onClick={() => log("wet")} />
         <QuickButton icon={Poop} label="Poopy" bg="bg-amber-700" text="text-amber-50" busy={busy} onClick={() => log("poopy")} />
+      </div>
+    </div>
+  );
+}
+
+// Washing is a single moment too. Three alternatives rather than two, so the
+// buttons go three across like the sleep ribbon's.
+function BathRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) => void }) {
+  async function log(bathType: "bath" | "butt" | "hairWash") {
+    setBusy(true);
+    try {
+      await logBath(bathType);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
+      <div className="grid grid-cols-3 gap-2">
+        <QuickButton icon={Butt} label="Butt" bg="bg-fuchsia-500" text="text-fuchsia-50" busy={busy} onClick={() => log("butt")} />
+        <QuickButton icon={BabyFace} label="Bath" bg="bg-fuchsia-300" text="text-fuchsia-950" busy={busy} onClick={() => log("bath")} />
+        <QuickButton icon={HairWash} label="Hair wash" bg="bg-fuchsia-800" text="text-fuchsia-50" busy={busy} onClick={() => log("hairWash")} />
       </div>
     </div>
   );
