@@ -241,45 +241,71 @@ scrim inside the entry sheet, which never scrolls.
 ## The bottom nav sits one safe-area inset too high on launch
 
 Symptom: on first startup the bottom bar hangs above the screen edge with a
-band of background under it. Swiping up/down fixes it — even on a page with
-nothing to scroll.
+band under it. Swiping fixes it — but only on a page with nothing to scroll.
+On a page with a full list, pulling past the end does nothing.
 
-`index.html` sets `viewport-fit=cover` and a black-translucent status bar. On
-iOS, an installed PWA launches **rendered into a window one safe-area inset
-shorter than the screen** — measured on an iPhone 15 Pro (393x852 CSS): a
-793-tall window on an 852-tall screen, a 59px shortfall matching the device's
-*top* inset. `position: fixed; bottom: 0` resolves against that window, so the
-bar lands 59px high. The swipe makes iOS re-measure; that's the actual repair.
+### What's actually happening
 
-Three wrong turns, none of which can work — don't retry them:
+`index.html` sets `viewport-fit=cover` with a black-translucent status bar. On
+iOS an installed PWA launches **rendered into a window one top-safe-area inset
+shorter than the screen**. Measured on an iPhone 15 Pro (393x852 CSS): a
+793-tall window on an 852-tall screen, a 59px shortfall matching the top
+inset. `position: fixed; bottom: 0` resolves against that window, so the bar
+lands 59px high.
+
+**The band is outside the rendering surface**, not empty page. Proven by
+experiment: a bar translated down into it came back *clipped*, with all
+content stopping dead at 793 and the labels simply not drawn. So no CSS can
+fill it. Only iOS resizing the window fixes it.
+
+**What provokes the resize is a document-level scroll or rubber-band.** This
+is why it appeared when the log pages each got their own scroller: before
+that a swipe moved the document. Now three things block it — `height: 100%`
+leaves nothing to scroll, `overscroll-behavior-y: none` on the body blocks the
+rubber-band, and each page's `overscroll-contain` absorbs a pull before it
+reaches the document. Hence the exact reported split between a short page and
+a full list.
+
+### Failed approaches — don't retry these
 
 1. **Sizing the app column from a measured viewport** (`visualViewport.height`,
-   `innerHeight`, `h-dvh`). All of them report the short window, so the bar
-   went from wrong-at-launch to wrong-*always*.
-2. **Forcing an element-level relayout** of the nav (toggling `display`,
-   reading `offsetHeight`). That doesn't make iOS re-resolve the containing
-   block a fixed element is positioned against.
-3. **Translating the bar down** by the measured gap between
-   `getBoundingClientRect().bottom` and `screen.height`. This is the
-   instructive failure: it moved the bar into the band correctly and the bar
-   got **clipped**, because the page isn't being rendered into that band at
-   all. A screenshot confirmed it — nav border at 764, all content stopping
-   dead at 793, the labels below it simply not drawn.
+   `innerHeight`, `h-dvh`). All report the short window, so the bar went from
+   wrong-at-launch to wrong-*always*.
+2. **Forcing an element-level relayout** (toggling `display`, reading
+   `offsetHeight`). Doesn't make iOS re-resolve a fixed element's containing
+   block.
+3. **Translating the bar down** by `screen.height - getBoundingClientRect()
+   .bottom`. This is the one that proved the band is unrenderable: the bar
+   moved correctly and got clipped.
+4. **A one-pixel `window.scrollTo`** with a spacer added and removed inside a
+   single task. The document had no scrollable extent and the position was
+   undone before layout, so nothing scrolled at all.
 
-That last one is the general lesson: **nothing drawn inside the page can fill
-that band.** The window is genuinely short; only iOS can fix it.
+### The fix
 
-So `src/hooks/useViewportSettle.ts` provokes the re-measure instead of
-compensating for it. Two nudges, both invisible: re-parsing the viewport meta
-(same semantics, different string) and a one-pixel document scroll against a
-temporary spacer added and removed inside one task. It retries on a schedule
-out to 3s, guarded by `innerHeight < screen.height` in standalone portrait, so
-it does nothing once the window matches the screen and nothing at all in a
-browser tab.
+`src/hooks/useViewportSettle.ts` arms "settle mode" while the window is short:
+it injects a stylesheet that gives the document exactly the missing height,
+re-enables body overscroll, and neutralises `overscroll-contain`, then scrolls
+the document and lets go a frame later. That both performs the gesture and
+lets the user's own swipe through, on any page rather than only a short one.
 
-If this ever stops working the fallback is the *original* behaviour, not a
-broken one: the bar sits high until the first swipe. Never reintroduce a
-transform to "help" — that trades a cosmetic gap for a clipped, unusable nav.
+The extra height comes from `screen.height - innerHeight`, **not**
+`env(safe-area-inset-top)` — the inset is one of the things iOS has wrong at
+that moment, and a zero there would make the rule silently do nothing.
+
+It disarms the instant the window matches the screen, and backs off after 8s
+if it doesn't, re-arming on the next touch so the app still heals later.
+Guarded to standalone portrait, and skipped while an input is focused (an open
+keyboard shortens the window too, and that is a different bug).
+
+Failing here costs the cosmetic gap and nothing else. Never reintroduce a
+transform to "help" — that trades the gap for a clipped, unusable nav.
+
+### Possibly fixed at the platform level
+
+Safari 26.1 (Nov 2025) release notes list a fix for "a bottom gap appearing on
+layouts with viewport-sized fixed containers on iOS", which is a close match.
+Worth checking the phone's iOS version before spending time here again.
 
 ## iOS PWA stale cache
 
