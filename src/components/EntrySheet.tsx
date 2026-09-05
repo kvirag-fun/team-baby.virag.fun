@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SunMoon, Pill, Trash2, X } from "lucide-react";
 import { Diaper } from "./DiaperIcon";
-import { BabyBottle } from "./FeedIcons";
+import { Breast } from "./FeedIcons";
 import {
   isPointType,
   type AmountUnit,
@@ -25,7 +25,7 @@ type SleepKind = SleepType | "awake";
 
 const TYPE_OPTIONS: { key: Kind; label: string; icon: typeof SunMoon; active: string }[] = [
   { key: "sleep", label: "Sleep / Awake", icon: SunMoon, active: "bg-indigo-500 text-white" },
-  { key: "feed", label: "Feed", icon: BabyBottle, active: "bg-emerald-500 text-white" },
+  { key: "feed", label: "Feed", icon: Breast, active: "bg-emerald-500 text-white" },
   { key: "diaper", label: "Diaper", icon: Diaper, active: "bg-sky-500 text-white" },
   { key: "supplement", label: "Supplement", icon: Pill, active: "bg-red-500 text-white" },
 ];

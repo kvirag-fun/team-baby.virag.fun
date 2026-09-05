@@ -3,17 +3,17 @@ import { Moon, MoonStar, Sun, Pill } from "lucide-react";
 import { isPointType, type Entry } from "@/lib/types";
 import { colorFor, labelFor } from "@/lib/colors";
 import { fmtDayHeading, fmtDuration, fmtTime, startOfDay } from "@/lib/time";
-import { Diaper } from "./DiaperIcon";
+import { Diaper, Poop } from "./DiaperIcon";
 import { BabyBottle, Breast } from "./FeedIcons";
 
-// Wet and poopy share one icon and are told apart by colour, as do vitamin D
-// and iron. Sleep and feed each give their sub-types their own icon, since
-// nap/overnight and breast/bottle are visibly different things.
+// Vitamin D and iron share an icon and are told apart by colour. Sleep, feed
+// and diaper each give their sub-types their own, since nap/overnight,
+// breast/bottle and wet/poopy are visibly different things.
 function iconFor(entry: Entry) {
   if (entry.type === "sleep") return entry.sleepType === "overnight" ? MoonStar : Moon;
   if (entry.type === "awake") return Sun;
   if (entry.type === "supplement") return Pill;
-  if (entry.type === "diaper") return Diaper;
+  if (entry.type === "diaper") return entry.diaperType === "poopy" ? Poop : Diaper;
   return entry.feedType === "formula" ? BabyBottle : Breast;
 }
 

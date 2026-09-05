@@ -26,3 +26,16 @@ export const Diaper = createLucideIcon("Diaper", [
   ],
   ["path", { d: "M12 9v7", key: "indicator" }],
 ]);
+
+/** The poopy variant. lucide has no poop either, so this is the familiar
+ * three-mound pile drawn as one silhouette — no face, which wouldn't survive
+ * the 18px it's shown at in the log list anyway. */
+export const Poop = createLucideIcon("Poop", [
+  [
+    "path",
+    {
+      d: "M4 21h16a4 4 0 0 0-2.6-3.7A3.4 3.4 0 0 0 15 11.6 3 3 0 0 0 12.2 7 2.6 2.6 0 0 0 11 2.5c.6 1.5.2 2.6-.7 3.4-1.3 1.1-1.5 2.4-1 3.6a3.4 3.4 0 0 0-2.8 4.6A4 4 0 0 0 4 21z",
+      key: "pile",
+    },
+  ],
+]);
