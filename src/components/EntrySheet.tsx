@@ -10,6 +10,7 @@ import {
   type DiaperType,
   type Entry,
   type EntryType,
+  type FeedSide,
   type FeedType,
   type NewEntry,
   type SleepType,
@@ -72,6 +73,7 @@ export function EntrySheet({
   const [ongoing, setOngoing] = useState(initial ? initial.endTime == null : false);
   const [end, setEnd] = useState(toInputValue(initial?.endTime ?? Date.now()));
   const [feedType, setFeedType] = useState<FeedType>(initial?.feedType ?? "breastmilk");
+  const [feedSide, setFeedSide] = useState<FeedSide | null>(initial?.feedSide ?? null);
   const [supplementType, setSupplementType] = useState<SupplementType>(initial?.supplementType ?? "vitaminD");
   const [diaperType, setDiaperType] = useState<DiaperType>(initial?.diaperType ?? "wet");
   const [bathType, setBathType] = useState<BathType>(initial?.bathType ?? "bath");
@@ -92,6 +94,8 @@ export function EntrySheet({
         startTime,
         endTime: isPoint ? null : ongoing ? null : fromInputValue(end),
         feedType: type === "feed" ? feedType : null,
+        // Only a breastmilk feed has a side; a bottle never does.
+        feedSide: type === "feed" && feedType === "breastmilk" ? feedSide : null,
         sleepType: type === "sleep" ? (sleepKind as SleepType) : null,
         supplementType: type === "supplement" ? supplementType : null,
         diaperType: type === "diaper" ? diaperType : null,
@@ -226,6 +230,25 @@ export function EntrySheet({
                   Bottle
                 </button>
               </div>
+
+              {feedType === "breastmilk" && (
+                <div className="grid grid-cols-2 gap-2">
+                  {(["left", "right"] as const).map((s) => (
+                    <button
+                      key={s}
+                      // Tapping the chosen side again clears it, for a feed
+                      // logged before sides were tracked or where it wasn't
+                      // noted.
+                      onClick={() => setFeedSide(feedSide === s ? null : s)}
+                      className={`rounded-xl border py-2 text-sm font-medium capitalize ${
+                        feedSide === s ? "border-transparent bg-emerald-700 text-emerald-50" : "border-slate-700 text-slate-400"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-2">
                 <label className="flex flex-1 flex-col gap-1 text-sm text-slate-400">
                   Amount

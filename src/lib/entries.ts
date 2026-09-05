@@ -28,6 +28,7 @@ function fromDoc(id: string, data: Record<string, unknown>): Entry {
     startTime: ts(data.startTime) as number,
     endTime: ts(data.endTime),
     feedType: (data.feedType as Entry["feedType"]) ?? null,
+    feedSide: (data.feedSide as Entry["feedSide"]) ?? null,
     sleepType: (data.sleepType as Entry["sleepType"]) ?? null,
     supplementType: (data.supplementType as Entry["supplementType"]) ?? null,
     diaperType: (data.diaperType as Entry["diaperType"]) ?? null,

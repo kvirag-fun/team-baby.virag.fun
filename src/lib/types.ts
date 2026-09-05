@@ -1,5 +1,8 @@
 export type EntryType = "sleep" | "awake" | "feed" | "supplement" | "diaper" | "bath";
 export type FeedType = "formula" | "breastmilk";
+/** Which breast a breastmilk feed came from. Null on a bottle, and on any
+ * breastmilk feed logged before this was tracked. */
+export type FeedSide = "left" | "right";
 export type SleepType = "nap" | "overnight";
 export type SupplementType = "vitaminD" | "iron";
 export type DiaperType = "wet" | "poopy";
@@ -21,6 +24,7 @@ export interface Entry {
   /** epoch millis; null while an ongoing sleep/awake stretch has no end yet */
   endTime: number | null;
   feedType: FeedType | null;
+  feedSide: FeedSide | null;
   sleepType: SleepType | null;
   supplementType: SupplementType | null;
   diaperType: DiaperType | null;

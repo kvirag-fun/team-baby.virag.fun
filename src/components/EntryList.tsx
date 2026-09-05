@@ -98,6 +98,11 @@ export function EntryList({
                         )}
                       </span>
                     </span>
+                    {entry.feedSide && (
+                      <span className="shrink-0 rounded-full border border-slate-600 px-2.5 py-0.5 text-xs capitalize text-slate-300">
+                        {entry.feedSide}
+                      </span>
+                    )}
                     {!isPoint && !entry.endTime && (
                       <span className="shrink-0 rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
                         ongoing

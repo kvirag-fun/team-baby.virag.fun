@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, Moon, MoonStar, Sun, Pill, type LucideIcon } from "lucide-react";
+import { Loader2, Moon, MoonStar, Sun, Pill, X, type LucideIcon } from "lucide-react";
 import type { Entry } from "@/lib/types";
 import { Diaper, Poop } from "./DiaperIcon";
 import { BabyFace, Butt, HairWash } from "./BathIcons";
@@ -152,20 +152,46 @@ function SleepAwakeRibbon({
 // Feed isn't a tracked, ongoing activity like sleep/awake — it's a single
 // moment (with an amount). Tapping logs it immediately at the current time;
 // amount can be filled in afterward by tapping the entry below.
+//
+// Boob is the exception: it asks which side first, since that's worth knowing
+// and is impossible to reconstruct later. The question replaces the two
+// buttons in place rather than opening a sheet, so it stays two taps.
 function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) => void }) {
-  async function log(feedType: "formula" | "breastmilk") {
+  const [askingSide, setAskingSide] = useState(false);
+
+  async function log(feedType: "formula" | "breastmilk", feedSide: "left" | "right" | null = null) {
     setBusy(true);
     try {
-      await logFeed(feedType);
+      await logFeed(feedType, feedSide);
+      setAskingSide(false);
     } finally {
       setBusy(false);
     }
   }
 
+  if (askingSide) {
+    return (
+      <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
+        <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+          <QuickButton icon={Breast} label="Left" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk", "left")} />
+          <QuickButton icon={Breast} label="Right" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk", "right")} />
+          <button
+            onClick={() => setAskingSide(false)}
+            disabled={busy}
+            aria-label="Cancel"
+            className="flex w-12 items-center justify-center rounded-2xl border border-slate-700 text-slate-400 disabled:opacity-60"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className="grid grid-cols-2 gap-2">
-        <QuickButton icon={Breast} label="Boob" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk")} />
+        <QuickButton icon={Breast} label="Boob" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => setAskingSide(true)} />
         <QuickButton icon={BabyBottle} label="Bottle" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => log("formula")} />
       </div>
     </div>
