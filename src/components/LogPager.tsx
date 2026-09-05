@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Entry, EntryType } from "@/lib/types";
+import { isPointType, type Entry, type EntryType } from "@/lib/types";
+import { startOfDaysAgo } from "@/lib/time";
+import { useTick } from "@/hooks/useTick";
 import { ActivityRibbon } from "./ActivityRibbon";
 import { EntryList } from "./EntryList";
 
@@ -13,6 +15,11 @@ const PAGES: { key: "sleep" | "feed" | "supplement" | "diaper" | "bath"; label: 
   { key: "supplement", label: "Supplements", dot: "bg-red-400", types: ["supplement"] },
   { key: "bath", label: "Bath", dot: "bg-fuchsia-400", types: ["bath"] },
 ];
+
+/** How many days back the log pages go: today, yesterday, the day before.
+ * Anything older is history and belongs in the calendar, which can reach any
+ * date. This also keeps a page's length bounded rather than growing forever. */
+const LOG_DAYS = 3;
 
 const SWIPE_AXIS_THRESHOLD = 8;
 // Drag past 22% of the page width to change pages, or flick quickly a
@@ -36,12 +43,25 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
   const containerRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);
 
+  // Re-render periodically so the window rolls over at midnight rather than
+  // holding whichever three days were current when the app was opened.
+  useTick(60_000);
+  const windowStart = startOfDaysAgo(LOG_DAYS - 1);
+
   // Filtering the already-sorted list per page keeps one ordering for all of
   // them, rather than concatenating per-type buckets and re-sorting.
-  const byPage = useMemo(
-    () => PAGES.map((p) => entries.filter((e) => p.types.includes(e.type))),
-    [entries],
-  );
+  //
+  // An interval entry still running is kept whenever it started, so a sleep
+  // someone forgot to end can't fall out of the window and become impossible
+  // to reach — the ribbon would still be counting it.
+  const byPage = useMemo(() => {
+    const inWindow = (e: Entry) =>
+      e.startTime >= windowStart || (!isPointType(e.type) && !e.endTime);
+    return PAGES.map((p) => {
+      const mine = entries.filter((e) => p.types.includes(e.type));
+      return { shown: mine.filter(inWindow), hasOlder: mine.some((e) => !inWindow(e)) };
+    });
+  }, [entries, windowStart]);
 
   function onScroll() {
     const el = containerRef.current;
@@ -183,7 +203,7 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
         {PAGES.map((p, i) => (
           <div key={p.key} className="w-full shrink-0">
             <ActivityRibbon type={p.key} entries={entries} />
-            <EntryList entries={byPage[i]} onEdit={onEdit} />
+            <EntryList entries={byPage[i].shown} onEdit={onEdit} hasOlder={byPage[i].hasOlder} />
           </div>
         ))}
       </div>

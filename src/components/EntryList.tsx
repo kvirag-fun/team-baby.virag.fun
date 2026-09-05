@@ -22,7 +22,17 @@ function iconFor(entry: Entry) {
   return entry.feedType === "formula" ? BabyBottle : Breast;
 }
 
-export function EntryList({ entries, onEdit }: { entries: Entry[]; onEdit: (e: Entry) => void }) {
+export function EntryList({
+  entries,
+  onEdit,
+  hasOlder = false,
+}: {
+  entries: Entry[];
+  onEdit: (e: Entry) => void;
+  /** Whether entries exist beyond the pages' three-day window, in which case
+   * the list says where they went rather than just ending. */
+  hasOlder?: boolean;
+}) {
   const groups = useMemo(() => {
     const map = new Map<number, Entry[]>();
     for (const e of entries) {
@@ -33,8 +43,19 @@ export function EntryList({ entries, onEdit }: { entries: Entry[]; onEdit: (e: E
     return [...map.entries()].sort((a, b) => b[0] - a[0]);
   }, [entries]);
 
+  const older = hasOlder ? (
+    <p className="px-4 pb-2 pt-1 text-center text-xs text-slate-600">Older entries are in the calendar</p>
+  ) : null;
+
   if (groups.length === 0) {
-    return <p className="px-4 py-8 text-center text-sm text-slate-500">Nothing logged yet.</p>;
+    return (
+      <>
+        <p className="px-4 py-8 text-center text-sm text-slate-500">
+          {hasOlder ? "Nothing in the last three days." : "Nothing logged yet."}
+        </p>
+        {older}
+      </>
+    );
   }
 
   return (
@@ -89,6 +110,7 @@ export function EntryList({ entries, onEdit }: { entries: Entry[]; onEdit: (e: E
           </ul>
         </div>
       ))}
+      {older}
     </div>
   );
 }

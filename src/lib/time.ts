@@ -20,6 +20,16 @@ export function startOfDay(ms: number) {
   return d.getTime();
 }
 
+/** Midnight `days` days before the day `from` falls in. Steps by calendar day
+ * rather than subtracting 24h at a time, so a clock change doesn't land it an
+ * hour either side of midnight. */
+export function startOfDaysAgo(days: number, from = Date.now()) {
+  const d = new Date(from);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - days);
+  return d.getTime();
+}
+
 export function fmtDuration(startMs: number, endMs: number | null) {
   const end = endMs ?? Date.now();
   const totalMin = Math.max(0, Math.round((end - startMs) / 60000));
