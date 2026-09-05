@@ -331,6 +331,30 @@ shortens the window too, and that is a different bug).
 Failing here costs the cosmetic gap and nothing else. Never reintroduce a
 transform to "help" — that trades the gap for a clipped, unusable nav.
 
+### The actual cure: don't use a translucent status bar
+
+All of the above is downstream of one choice. `black-translucent` is what
+makes the web view full-screen and draws it under the status bar — and it is
+that full-screen window whose height iOS reports late. `index.html` now sets
+`apple-mobile-web-app-status-bar-style` to **`black`**, which has iOS size the
+view below the status bar consistently, from the first frame. There is then no
+short window, so nothing to provoke, hide, or compensate for.
+
+Costs, both small: the app no longer draws under the status bar (iOS paints
+that strip `#000`, against the app's `#020617` — near enough to be invisible),
+and `env(safe-area-inset-top)` becomes 0, which collapses the header's
+`pt-[calc(env(safe-area-inset-top)+1rem)]` to a plain `pt-4` on its own.
+
+`BOTTOM_SAFE` in `BottomNav.tsx` is `max(env(safe-area-inset-bottom), 8px)`
+as insurance: if iOS reserves the home-indicator strip itself under this
+status-bar style, the inset reads 0 and the buttons would otherwise sit on top
+of it. Where the inset is real it dwarfs 8px, so it changes nothing.
+
+`viewportSettle` is kept as a safety net and costs nothing — it returns
+immediately when the window already matches the screen, which is now the case
+from launch. If this status-bar change ever gets reverted, that code is what
+stops the bug coming back.
+
 ### Possibly fixed at the platform level
 
 Safari 26.1 (Nov 2025) release notes list a fix for "a bottom gap appearing on

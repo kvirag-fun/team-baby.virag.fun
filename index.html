@@ -11,7 +11,15 @@
     <!-- Add to Home Screen (iOS Safari doesn't read the manifest for these) -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Deliberately "black", not "black-translucent". Translucent makes the
+         web view full-screen and draw under the status bar — and iOS launches
+         it into a window one top-inset shorter than the screen, which left the
+         fixed bottom bar hanging above the screen edge until something forced
+         a resize. "black" has iOS size the view below the status bar
+         consistently, from the first frame. The strip it paints is #000 next
+         to the app's #020617, which is near enough to be invisible. See
+         CLAUDE.md before changing this back. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="Team Baby" />
   </head>
   <body class="bg-slate-950 text-slate-100">
