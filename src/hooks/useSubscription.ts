@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { checkConnection } from "@/lib/connection";
 
 type Subscribe<T> = (onChange: (value: T) => void, onError: (err: Error) => void) => () => void;
 
@@ -13,8 +14,14 @@ type Subscribe<T> = (onChange: (value: T) => void, onError: (err: Error) => void
  * Worse, a listener can go dead *without* erroring: an installed PWA that
  * iOS has suspended in the background comes back with a connection that
  * never delivers and never fails, so nothing arrives and no error handler
- * runs — the app just sits on "Loading…". Nothing in the SDK notices, so
- * every return to the foreground re-establishes the subscription. */
+ * runs — the app just sits on "Loading…". Nothing in the SDK notices.
+ *
+ * Re-establishing on every return to the foreground fixed that, and cost a
+ * fortune: a fresh listener re-reads its whole result set, so the entries
+ * query alone was one billed read per entry per foreground. Now a return to
+ * the foreground asks a single cheap question first — see checkConnection —
+ * and only rebuilds when the answer is bad, or when this subscription has
+ * never actually delivered anything. */
 export function useSubscription<T>(subscribe: Subscribe<T>, initial: T) {
   const [state, setState] = useState<{ value: T; loading: boolean; error: string | null }>({
     value: initial,
@@ -27,11 +34,17 @@ export function useSubscription<T>(subscribe: Subscribe<T>, initial: T) {
     let retryTimer: number | undefined;
     let attempt = 0;
     let stopped = false;
+    // Whether this subscription has produced anything since it was started.
+    // A listener that has never delivered is stuck whatever the canary says.
+    let delivered = false;
+    let hiddenAt = 0;
 
     function start() {
+      delivered = false;
       unsub = subscribe(
         (value) => {
           attempt = 0;
+          delivered = true;
           setState({ value, loading: false, error: null });
         },
         (err) => {
@@ -46,7 +59,7 @@ export function useSubscription<T>(subscribe: Subscribe<T>, initial: T) {
     }
 
     function restart() {
-      if (document.visibilityState !== "visible") return;
+      if (stopped || document.visibilityState !== "visible") return;
       window.clearTimeout(retryTimer);
       unsub?.();
       unsub = undefined;
@@ -54,16 +67,39 @@ export function useSubscription<T>(subscribe: Subscribe<T>, initial: T) {
       start();
     }
 
+    /** An absence shorter than this can't have killed the connection, so it
+     * isn't worth even the one read to check. */
+    const MIN_HIDDEN_MS = 10_000;
+
+    async function onVisibility() {
+      if (document.visibilityState !== "visible") {
+        hiddenAt = Date.now();
+        return;
+      }
+      // Nothing running, or nothing ever received: rebuild without asking,
+      // since the canary can't tell us anything we'd act on differently.
+      if (!unsub || !delivered) {
+        restart();
+        return;
+      }
+      if (Date.now() - hiddenAt < MIN_HIDDEN_MS) return;
+      if (!(await checkConnection())) restart();
+    }
+
+    async function onOnline() {
+      if (!unsub || !delivered || !(await checkConnection())) restart();
+    }
+
     start();
-    document.addEventListener("visibilitychange", restart);
-    window.addEventListener("online", restart);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("online", onOnline);
 
     return () => {
       stopped = true;
       window.clearTimeout(retryTimer);
       unsub?.();
-      document.removeEventListener("visibilitychange", restart);
-      window.removeEventListener("online", restart);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("online", onOnline);
     };
   }, [subscribe]);
 
