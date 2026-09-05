@@ -51,19 +51,36 @@ function AppShell({
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col pb-24">
+    // A column the exact height of the viewport: header and nav are fixed
+    // slices of it and the middle scrolls. The document itself never scrolls,
+    // so the nav sits in normal flow rather than being pinned over the
+    // content — which is also what stops it detaching when iOS reports a
+    // stale viewport height.
+    <div className="mx-auto flex h-dvh max-w-md flex-col overflow-hidden">
       <AppHeader />
 
-      {error && <p className="px-4 pb-2 text-sm text-rose-400">{error}</p>}
-      {loading ? (
-        <p className="px-4 py-8 text-center text-sm text-slate-500">Loading…</p>
-      ) : (
-        <>
-          {tab === "timeline" && <LogPager entries={entries} onEdit={setSheetEntry} />}
-          {tab === "calendar" && <CalendarView entries={entries} onEdit={setSheetEntry} />}
-          {tab === "stats" && <StatsView entries={entries} />}
-        </>
-      )}
+      {error && <p className="shrink-0 px-4 pb-2 text-sm text-rose-400">{error}</p>}
+      <main className="min-h-0 flex-1 overflow-hidden">
+        {loading ? (
+          <p className="px-4 py-8 text-center text-sm text-slate-500">Loading…</p>
+        ) : (
+          <>
+            {tab === "timeline" && <LogPager entries={entries} onEdit={setSheetEntry} />}
+            {/* The pager scrolls its pages itself; these two are plain
+                documents, so they get the scroll container here. */}
+            {tab === "calendar" && (
+              <div className="h-full overflow-y-auto">
+                <CalendarView entries={entries} onEdit={setSheetEntry} />
+              </div>
+            )}
+            {tab === "stats" && (
+              <div className="h-full overflow-y-auto">
+                <StatsView entries={entries} />
+              </div>
+            )}
+          </>
+        )}
+      </main>
 
       <BottomNav tab={tab} onTab={setTab} onAdd={() => setSheetEntry("new")} onLock={onLock} />
 
