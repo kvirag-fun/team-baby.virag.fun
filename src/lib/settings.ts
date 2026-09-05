@@ -3,10 +3,31 @@ import { db } from "./firebase";
 
 const settingsDoc = doc(db, "settings", "app");
 
-export function subscribeBabyName(onChange: (name: string) => void, onError: (err: Error) => void) {
+/** Everything held in settings/app, delivered by a single listener.
+ *
+ * The name and the notifications flag used to have a listener each. Firestore
+ * bills a read per document per listener, so that doc was read twice on every
+ * subscribe — and useSubscription re-subscribes whenever the app comes back to
+ * the foreground, so it was twice per foreground, forever. One listener, two
+ * values. */
+export interface AppSettings {
+  babyName: string;
+  notificationsEnabled: boolean;
+}
+
+export const NO_APP_SETTINGS: AppSettings = { babyName: "", notificationsEnabled: false };
+
+export function subscribeAppSettings(
+  onChange: (settings: AppSettings) => void,
+  onError: (err: Error) => void,
+) {
   return onSnapshot(
     settingsDoc,
-    (snap) => onChange((snap.data()?.babyName as string | undefined) ?? ""),
+    (snap) =>
+      onChange({
+        babyName: (snap.data()?.babyName as string | undefined) ?? "",
+        notificationsEnabled: (snap.data()?.notificationsEnabled as boolean | undefined) ?? false,
+      }),
     onError,
   );
 }
@@ -18,15 +39,7 @@ export async function setBabyName(name: string) {
 /** Shared master switch: whether the Cloud Function should push
  * notifications at all. Each device also separately needs browser
  * notification permission granted to actually receive anything — see
- * src/lib/notifications.ts. */
-export function subscribeNotificationsEnabled(onChange: (enabled: boolean) => void, onError: (err: Error) => void) {
-  return onSnapshot(
-    settingsDoc,
-    (snap) => onChange((snap.data()?.notificationsEnabled as boolean | undefined) ?? false),
-    onError,
-  );
-}
-
+ * src/lib/notifications.ts. Read through subscribeAppSettings. */
 export async function setNotificationsEnabled(enabled: boolean) {
   await setDoc(settingsDoc, { notificationsEnabled: enabled }, { merge: true });
 }

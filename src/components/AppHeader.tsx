@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { Bell, BellOff, Settings } from "lucide-react";
 import { useAvatar } from "@/hooks/useAvatar";
-import { useBabyName } from "@/hooks/useBabyName";
-import { useNotificationsEnabled } from "@/hooks/useNotificationsEnabled";
+import { useAppSettings } from "@/hooks/useAppSettings";
 import { hasDevicePermission, touchLastSeen } from "@/lib/notifications";
 import { SettingsSheet } from "./SettingsSheet";
 import { NotificationsSheet } from "./NotificationsSheet";
 
 export function AppHeader() {
-  const babyName = useBabyName();
+  // The single settings/app listener. Its two values are passed down rather
+  // than re-subscribed for, which is the whole point of merging them.
+  const { babyName, notificationsEnabled } = useAppSettings();
   const avatar = useAvatar();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -20,7 +21,7 @@ export function AppHeader() {
           <h1 className="truncate text-lg font-semibold">Team {babyName || "Baby"}</h1>
         </div>
         <div className="flex items-center gap-1">
-          <NotificationsToggle />
+          <NotificationsToggle enabled={notificationsEnabled} />
           <button
             onClick={() => setSettingsOpen(true)}
             aria-label="Settings"
@@ -39,8 +40,7 @@ export function AppHeader() {
 
 // The bell opens the notifications sheet rather than toggling directly —
 // the master switch lives in there now, alongside the per-activity ones.
-function NotificationsToggle() {
-  const enabled = useNotificationsEnabled();
+function NotificationsToggle({ enabled }: { enabled: boolean }) {
   const [open, setOpen] = useState(false);
   const active = enabled && hasDevicePermission();
 
@@ -62,7 +62,7 @@ function NotificationsToggle() {
       >
         {active ? <Bell className="h-4.5 w-4.5" /> : <BellOff className="h-4.5 w-4.5" />}
       </button>
-      {open && <NotificationsSheet onClose={() => setOpen(false)} />}
+      {open && <NotificationsSheet enabled={enabled} onClose={() => setOpen(false)} />}
     </>
   );
 }

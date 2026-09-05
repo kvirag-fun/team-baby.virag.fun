@@ -10,7 +10,6 @@ import {
   type NotificationTypes,
 } from "@/lib/notifications";
 import { setNotificationsEnabled } from "@/lib/settings";
-import { useNotificationsEnabled } from "@/hooks/useNotificationsEnabled";
 import { useSheetScrollLock } from "@/hooks/useSheetScrollLock";
 
 // Sleep and awake are separate rows rather than one, because they arrive as
@@ -45,8 +44,15 @@ function Switch({ on, disabled, onClick }: { on: boolean; disabled?: boolean; on
   );
 }
 
-export function NotificationsSheet({ onClose }: { onClose: () => void }) {
-  const enabled = useNotificationsEnabled();
+export function NotificationsSheet({
+  enabled,
+  onClose,
+}: {
+  /** From the header's settings subscription — this sheet deliberately does
+   * not open one of its own. */
+  enabled: boolean;
+  onClose: () => void;
+}) {
   const active = enabled && hasDevicePermission();
   const [types, setTypes] = useState<NotificationTypes>(ALL_NOTIFICATION_TYPES);
   const [busy, setBusy] = useState(false);
