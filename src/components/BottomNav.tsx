@@ -1,5 +1,4 @@
 import { CalendarDays, ListChecks, Plus, BarChart3, Lock } from "lucide-react";
-import { useBottomAnchor } from "@/hooks/useBottomAnchor";
 
 export type Tab = "timeline" | "calendar" | "stats";
 
@@ -19,11 +18,6 @@ export function BottomNav({
   onAdd: () => void;
   onLock: () => void;
 }) {
-  // `bottom: 0` below is not enough on iOS: the viewport it resolves against
-  // is shorter than the screen, so the bar lands above the screen edge. This
-  // measures where it actually ended up and corrects it. See useBottomAnchor.
-  const ref = useBottomAnchor<HTMLElement>();
-
   const item = (t: Tab, Icon: typeof ListChecks, label: string) => (
     <button
       onClick={() => onTab(t)}
@@ -45,7 +39,7 @@ export function BottomNav({
   // tore the nav across the middle of the list. That, not the positioning,
   // was what made it float.
   return (
-    <nav ref={ref} className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-800 bg-slate-950 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-800 bg-slate-950 pb-[env(safe-area-inset-bottom)]">
       <div className="relative mx-auto flex max-w-md items-center">
         {item("timeline", ListChecks, "Log")}
         {item("calendar", CalendarDays, "Calendar")}

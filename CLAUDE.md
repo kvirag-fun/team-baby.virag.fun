@@ -238,44 +238,48 @@ which looks identical anyway — they were 95% opaque over a slate-950 page,
 so there was nothing to blur. The one remaining use is the delete-confirm
 scrim inside the entry sheet, which never scrolls.
 
-## The bottom nav sits one safe-area inset too high — don't trust the viewport
+## The bottom nav sits one safe-area inset too high on launch
 
-Symptom: on launch the bottom bar hung above the screen edge with a band of
-background under it, then snapped into place on the first scroll.
+Symptom: on first startup the bottom bar hangs above the screen edge with a
+band of background under it. Swiping up/down fixes it — even on a page with
+nothing to scroll.
 
-`index.html` sets `viewport-fit=cover` and a black-translucent status bar.
-On iOS that makes the window the full screen — but the viewport-height
-quantities (`100dvh`, `window.innerHeight`, `visualViewport.height`) report
-the screen *minus the top safe-area inset*, and for the first moment after an
-installed PWA launches they are shorter still. `position: fixed; bottom: 0`
-resolves against that, so the bar lands short. Scrolling made iOS re-report,
-which is why it appeared to fix itself.
+`index.html` sets `viewport-fit=cover` and a black-translucent status bar. On
+iOS, an installed PWA launches **rendered into a window one safe-area inset
+shorter than the screen** — measured on an iPhone 15 Pro (393x852 CSS): a
+793-tall window on an 852-tall screen, a 59px shortfall matching the device's
+*top* inset. `position: fixed; bottom: 0` resolves against that window, so the
+bar lands 59px high. The swipe makes iOS re-measure; that's the actual repair.
 
-Measured on an iPhone 15 Pro (393×852 CSS): the nav's bottom edge sat at 794,
-i.e. 58px high — the device's top inset is 59px.
+Three wrong turns, none of which can work — don't retry them:
 
-Two wrong turns worth not repeating:
+1. **Sizing the app column from a measured viewport** (`visualViewport.height`,
+   `innerHeight`, `h-dvh`). All of them report the short window, so the bar
+   went from wrong-at-launch to wrong-*always*.
+2. **Forcing an element-level relayout** of the nav (toggling `display`,
+   reading `offsetHeight`). That doesn't make iOS re-resolve the containing
+   block a fixed element is positioned against.
+3. **Translating the bar down** by the measured gap between
+   `getBoundingClientRect().bottom` and `screen.height`. This is the
+   instructive failure: it moved the bar into the band correctly and the bar
+   got **clipped**, because the page isn't being rendered into that band at
+   all. A screenshot confirmed it — nav border at 764, all content stopping
+   dead at 793, the labels below it simply not drawn.
 
-- **Sizing the app column from a measured viewport** (`visualViewport.height`)
-  and putting the nav in normal flow at the end of it. Every one of those
-  numbers carries the same 59px shortfall, so the bar was then too high
-  *permanently* rather than just at launch. Same for `h-dvh`.
-- **Forcing a re-layout** of the nav (toggling `display`, reading
-  `offsetHeight`). An element-level relayout doesn't make iOS re-resolve the
-  containing block a fixed element is positioned against.
+That last one is the general lesson: **nothing drawn inside the page can fill
+that band.** The window is genuinely short; only iOS can fix it.
 
-The fix (`src/hooks/useBottomAnchor.ts`) asks no viewport anything. It reads
-where the nav actually landed with `getBoundingClientRect()`, compares that to
-`window.screen.height` — which is honest, and which iOS does not swap on
-rotation — and translates away the difference. Each pass measures the
-already-translated box, so passes converge and the transform drops back to
-zero the moment iOS starts reporting honestly. It runs on rAF for the first
-four seconds, then only on scroll/resize/rotation/foreground.
+So `src/hooks/useViewportSettle.ts` provokes the re-measure instead of
+compensating for it. Two nudges, both invisible: re-parsing the viewport meta
+(same semantics, different string) and a one-pixel document scroll against a
+temporary spacer added and removed inside one task. It retries on a schedule
+out to 3s, guarded by `innerHeight < screen.height` in standalone portrait, so
+it does nothing once the window matches the screen and nothing at all in a
+browser tab.
 
-Guards, all of which matter: it only acts in standalone portrait (elsewhere
-`screen.height` is not the app's height), only ever pushes the bar *down*,
-and caps the correction at 100px so a device that breaks the assumption keeps
-a visible nav instead of one shoved off-screen.
+If this ever stops working the fallback is the *original* behaviour, not a
+broken one: the bar sits high until the first swipe. Never reintroduce a
+transform to "help" — that trades a cosmetic gap for a clipped, unusable nav.
 
 ## iOS PWA stale cache
 

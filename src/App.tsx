@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntries } from "@/hooks/useEntries";
+import { useViewportSettle } from "@/hooks/useViewportSettle";
 import { LoginScreen } from "@/components/LoginScreen";
 import { AppHeader } from "@/components/AppHeader";
 import { BottomNav, NAV_CLEARANCE, type Tab } from "@/components/BottomNav";
@@ -12,6 +13,10 @@ import { createEntry, deleteEntry, updateEntry } from "@/lib/entries";
 import type { Entry, NewEntry } from "@/lib/types";
 
 export default function App() {
+  // Before anything renders: iOS launches an installed PWA into a window
+  // shorter than the screen, which leaves the bottom bar hanging above the
+  // screen edge until something makes iOS re-measure. See useViewportSettle.
+  useViewportSettle();
   const { user, loading, login, resetPassword, logout } = useAuth();
   const [tab, setTab] = useState<Tab>("timeline");
   const [sheetEntry, setSheetEntry] = useState<Entry | "new" | null>(null);
