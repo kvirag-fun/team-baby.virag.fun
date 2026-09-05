@@ -172,23 +172,6 @@ export function StatsView({ entries }: { entries: Entry[] }) {
       </div>
 
       <div>
-        {/* One series, so no key needed — the other charts stack two shades
-            of a hue and can't be read without one. */}
-        <h3 className="mb-2 text-sm font-medium text-slate-400">Baths per day</h3>
-        <div className="h-40 w-full">
-          <ResponsiveContainer>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-              <XAxis dataKey="label" stroke="#64748b" fontSize={11} interval={period === "month" ? 4 : 0} />
-              <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
-              <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
-              <Bar dataKey="baths" name="Baths" fill="#d946ef" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div>
         <h3 className="mb-2 text-sm font-medium text-slate-400">Supplements per day</h3>
         <div className="h-40 w-full">
           <ResponsiveContainer>
@@ -200,6 +183,23 @@ export function StatsView({ entries }: { entries: Entry[] }) {
               <Legend {...LEGEND_PROPS} />
               <Bar dataKey="vitaminD" name="Vitamin D" stackId="s" fill="#fca5a5" />
               <Bar dataKey="iron" name="Iron" stackId="s" fill="#991b1b" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div>
+        {/* One series, so no key needed — the other charts stack two shades
+            of a hue and can't be read without one. */}
+        <h3 className="mb-2 text-sm font-medium text-slate-400">Baths per day</h3>
+        <div className="h-40 w-full">
+          <ResponsiveContainer>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+              <XAxis dataKey="label" stroke="#64748b" fontSize={11} interval={period === "month" ? 4 : 0} />
+              <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
+              <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
+              <Bar dataKey="baths" name="Baths" fill="#d946ef" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

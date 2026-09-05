@@ -8,6 +8,7 @@ body,
 
 body {
   overscroll-behavior-y: none;
+  overflow: hidden;
 }
 
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {

@@ -2,11 +2,6 @@ import { CalendarDays, ListChecks, Plus, BarChart3, Lock } from "lucide-react";
 
 export type Tab = "timeline" | "calendar" | "stats";
 
-/** How much room the fixed nav needs at the bottom of a scrolling region:
- * its measured 55px of buttons plus whatever the device reserves for the home
- * indicator. */
-export const NAV_CLEARANCE = "calc(55px + env(safe-area-inset-bottom))";
-
 export function BottomNav({
   tab,
   onTab,
@@ -30,16 +25,17 @@ export function BottomNav({
     </button>
   );
 
-  // Pinned to the viewport bottom, overlaying the content. In normal flow at
-  // the end of the app's column it sat visibly higher on a phone, so it stays
-  // fixed and the scrolling region reserves NAV_CLEARANCE for it instead.
+  // The last slice of the app's viewport-height column, not pinned with
+  // `fixed`: `bottom: 0` resolves against the layout viewport, which iOS
+  // reports short for a moment after launch, leaving the bar hanging above
+  // the screen edge. Sitting at the end of a column whose height is measured
+  // (see useViewportHeight) takes that viewport out of the picture.
   //
-  // Deliberately no backdrop-blur: iOS composites a backdrop-filtered element
-  // on its own layer and paints it at a stale offset while scrolling, which
-  // tore the nav across the middle of the list. That, not the positioning,
-  // was what made it float.
+  // Deliberately no backdrop-blur either: iOS composites a backdrop-filtered
+  // element on its own layer and paints it at a stale offset while scrolling,
+  // which tore the nav across the middle of the list.
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-800 bg-slate-950 pb-[env(safe-area-inset-bottom)]">
+    <nav className="relative z-20 shrink-0 border-t border-slate-800 bg-slate-950 pb-[env(safe-area-inset-bottom)]">
       <div className="relative mx-auto flex max-w-md items-center">
         {item("timeline", ListChecks, "Log")}
         {item("calendar", CalendarDays, "Calendar")}
