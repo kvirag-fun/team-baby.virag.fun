@@ -6,12 +6,12 @@ import { createLucideIcon } from "lucide-react";
 /** A butt wash. Each cheek is a true circular arc rather than a hand-fitted
  * curve — Béziers kept flattening along the outside and coming out blocky.
  * They meet above the point each one bottoms out at, so the two read as
- * separate lobes instead of one blob. Radius 6.4 about (7.4, 11.8) and its
- * mirror, which fills the box to x 1–23 without the stroke clipping. */
+ * separate lobes instead of one blob. Radius 5.6 about (7.2, 11.5) and its
+ * mirror. */
 export const Butt = createLucideIcon("Butt", [
-  ["path", { d: "M5.21 5.79A6.4 6.4 0 1 0 12 16.25", key: "left-cheek" }],
-  ["path", { d: "M18.79 5.79A6.4 6.4 0 1 1 12 16.25", key: "right-cheek" }],
-  ["path", { d: "M12 16.25c.1-2.6-.3-4.6-1.6-6", key: "crease" }],
+  ["path", { d: "M5.75 6.09A5.6 5.6 0 1 0 12 14.38", key: "left-cheek" }],
+  ["path", { d: "M18.25 6.09A5.6 5.6 0 1 1 12 14.38", key: "right-cheek" }],
+  ["path", { d: "M12 14.38c.1-2.6-.3-4.6-1.6-6", key: "crease" }],
 ]);
 
 /** A bath. A baby's face — eyes as round-capped dots, the way lucide draws
