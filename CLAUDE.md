@@ -238,128 +238,53 @@ which looks identical anyway — they were 95% opaque over a slate-950 page,
 so there was nothing to blur. The one remaining use is the delete-confirm
 scrim inside the entry sheet, which never scrolls.
 
-## The bottom nav sits one safe-area inset too high on launch
+## Don't make the document unscrollable — it's what keeps the nav in place
 
-Symptom: on first startup the bottom bar hangs above the screen edge with a
-band under it. Swiping fixes it — but only on a page with nothing to scroll.
-On a page with a full list, pulling past the end does nothing.
+The app is one document taller than the viewport (`min-h-dvh` + `pb-24` on the
+shell in `App.tsx`, with a `fixed` bottom nav). Keep it that way.
 
-### Where the regression came from
+Commit `40234c5` changed the shell to `h-dvh` + `overflow-hidden` and gave each
+log page its own `overflow-y-auto overscroll-contain` scroller, to stop a page
+with five entries scrolling through the empty height of a page with a hundred.
+That made the document exactly viewport-height and unscrollable, and broke the
+bottom nav on iOS. `4b8f0a1` reverted it.
 
-Commit `40234c5` ("Give each log page its own scroll instead of one document
-scroll") changed the shell from `min-h-dvh ... pb-24` to `h-dvh ...
-overflow-hidden`. Before it, the whole app was one document taller than the
-viewport, so a document scroll was always available and iOS resized the window
-on its own — the bar was never wrong. Making each page scroll separately (to
-kill the dead space on short pages) left the document exactly viewport-height
-and unscrollable, which is what exposed all of the below.
+Why the two are connected, which is worth knowing before trying the same idea
+again:
 
-### What's actually happening
+- iOS launches an installed PWA rendered into a window one *top* safe-area
+  inset shorter than the screen (measured: a 793-tall window on an 852-tall
+  iPhone 15 Pro screen). `position: fixed; bottom: 0` resolves against that,
+  so the nav lands 59px high with a band under it.
+- That band is outside the rendering surface. A nav translated down into it
+  came back **clipped**, with all content stopping dead at 793 — so no CSS can
+  fill it. Only iOS resizing the window fixes it.
+- What makes iOS resize is a **document-level scroll or rubber-band**. While
+  the document scrolls, this happens immediately and invisibly on every
+  launch, which is why the bug never existed before `40234c5`.
 
-`index.html` sets `viewport-fit=cover` with a black-translucent status bar. On
-iOS an installed PWA launches **rendered into a window one top-safe-area inset
-shorter than the screen**. Measured on an iPhone 15 Pro (393x852 CSS): a
-793-tall window on an 852-tall screen, a 59px shortfall matching the top
-inset. `position: fixed; bottom: 0` resolves against that window, so the bar
-lands 59px high.
+Approaches tried against the broken layout, all failed — don't repeat them:
 
-**The band is outside the rendering surface**, not empty page. Proven by
-experiment: a bar translated down into it came back *clipped*, with all
-content stopping dead at 793 and the labels simply not drawn. So no CSS can
-fill it. Only iOS resizing the window fixes it.
+1. Sizing the column from a measured viewport (`visualViewport.height`,
+   `innerHeight`, `h-dvh`). All report the short window, so the nav went from
+   wrong-at-launch to wrong-always.
+2. Forcing an element-level relayout (toggling `display`, reading
+   `offsetHeight`). Doesn't re-resolve a fixed element's containing block.
+3. Translating the nav down by `screen.height - getBoundingClientRect().bottom`.
+   This is what proved the band unrenderable: the nav moved correctly and lost
+   its labels.
+4. Temporarily restoring the document scroll and driving it. It worked, but
+   only after paint, so the nav was painted high and then visibly jumped.
+   Hiding the nav until the window settled papered over the jump at the cost
+   of the nav appearing late.
+5. `apple-mobile-web-app-status-bar-style: black` instead of
+   `black-translucent`, to stop the window being full-screen at all. Untested
+   on device — reverted with the rest before it was ever tried.
 
-**What provokes the resize is a document-level scroll or rubber-band.** This
-is why it appeared when the log pages each got their own scroller: before
-that a swipe moved the document. Now three things block it — `height: 100%`
-leaves nothing to scroll, `overscroll-behavior-y: none` on the body blocks the
-rubber-band, and each page's `overscroll-contain` absorbs a pull before it
-reaches the document. Hence the exact reported split between a short page and
-a full list.
-
-### Failed approaches — don't retry these
-
-1. **Sizing the app column from a measured viewport** (`visualViewport.height`,
-   `innerHeight`, `h-dvh`). All report the short window, so the bar went from
-   wrong-at-launch to wrong-*always*.
-2. **Forcing an element-level relayout** (toggling `display`, reading
-   `offsetHeight`). Doesn't make iOS re-resolve a fixed element's containing
-   block.
-3. **Translating the bar down** by `screen.height - getBoundingClientRect()
-   .bottom`. This is the one that proved the band is unrenderable: the bar
-   moved correctly and got clipped.
-4. **A one-pixel `window.scrollTo`** with a spacer added and removed inside a
-   single task. The document had no scrollable extent and the position was
-   undone before layout, so nothing scrolled at all.
-
-### The fix
-
-`src/lib/viewportSettle.ts` arms "settle mode" while the window is short: it
-injects a stylesheet that gives the document exactly the missing height,
-re-enables body overscroll, and neutralises `overscroll-contain`, then scrolls
-the document and lets go a frame later. That both performs the gesture and
-lets the user's own swipe through, on any page rather than only a short one.
-
-The extra height comes from `screen.height - innerHeight`, **not**
-`env(safe-area-inset-top)` — the inset is one of the things iOS has wrong at
-that moment, and a zero there would make the rule silently do nothing.
-
-**Call it from `main.tsx` before the first render, never from an effect.**
-React effects run after paint, so the bar was painted in the wrong place and
-then visibly jumped down once the resize landed.
-
-**Hide the bar until the window is resized — not for a fixed time from boot.**
-A version that revealed 800ms after startup did nothing at all: `App` returns
-`null` while auth loads and the nav doesn't mount until the first entries
-arrive, which on a cold launch is later than that. The timer expired before
-the bar existed, so it mounted in the wrong place and jumped exactly as
-before. The reveal is now driven by the window matching the screen, with a 4s
-backstop so a device where this never works still gets a nav.
-
-Two details in the scrolling itself, both of which silently defeated earlier
-versions: read a layout property before scrolling (this runs before the first
-render, so the stylesheet may not be applied yet and scrolling a document with
-no extent is a no-op), and hold the scrolled position ~150ms rather than
-returning within the same task, which doesn't register as a scroll.
-
-It stays armed the whole time the window is short — that is the state the app
-was in before the regression, and it's what lets the user's own swipe chain to
-the document. Only the *programmatic* attempts are capped, at 10: past that
-the page would visibly twitch now that there's something on screen. Guarded to
-standalone portrait, and skipped while an input is focused (an open keyboard
-shortens the window too, and that is a different bug).
-
-Failing here costs the cosmetic gap and nothing else. Never reintroduce a
-transform to "help" — that trades the gap for a clipped, unusable nav.
-
-### The actual cure: don't use a translucent status bar
-
-All of the above is downstream of one choice. `black-translucent` is what
-makes the web view full-screen and draws it under the status bar — and it is
-that full-screen window whose height iOS reports late. `index.html` now sets
-`apple-mobile-web-app-status-bar-style` to **`black`**, which has iOS size the
-view below the status bar consistently, from the first frame. There is then no
-short window, so nothing to provoke, hide, or compensate for.
-
-Costs, both small: the app no longer draws under the status bar (iOS paints
-that strip `#000`, against the app's `#020617` — near enough to be invisible),
-and `env(safe-area-inset-top)` becomes 0, which collapses the header's
-`pt-[calc(env(safe-area-inset-top)+1rem)]` to a plain `pt-4` on its own.
-
-`BOTTOM_SAFE` in `BottomNav.tsx` is `max(env(safe-area-inset-bottom), 8px)`
-as insurance: if iOS reserves the home-indicator strip itself under this
-status-bar style, the inset reads 0 and the buttons would otherwise sit on top
-of it. Where the inset is real it dwarfs 8px, so it changes nothing.
-
-`viewportSettle` is kept as a safety net and costs nothing — it returns
-immediately when the window already matches the screen, which is now the case
-from launch. If this status-bar change ever gets reverted, that code is what
-stops the bug coming back.
-
-### Possibly fixed at the platform level
-
-Safari 26.1 (Nov 2025) release notes list a fix for "a bottom gap appearing on
-layouts with viewport-sized fixed containers on iOS", which is a close match.
-Worth checking the phone's iOS version before spending time here again.
+If the dead-space problem is worth solving again, the constraint is that the
+**document must stay scrollable**. The way to do that is to render only the
+active page in the document flow so the document is that page's height, rather
+than moving the scroll into per-page containers.
 
 ## iOS PWA stale cache
 

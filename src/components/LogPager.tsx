@@ -43,46 +43,14 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
     [entries],
   );
 
-  // Each page scrolls itself rather than the whole document scrolling behind
-  // them: side by side in one document scroller, every page was as tall as
-  // the tallest, so a page with five entries scrolled through the empty
-  // height of a page with a hundred.
-  const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const pageIndexRef = useRef(0);
-
-  // One shared offset the whole pager is "at", rather than each page keeping
-  // its own. Every page shows min(this, its own maximum), so moving to a
-  // shorter page lands at its bottom — and because what's remembered is the
-  // offset asked for and not the clamped result, coming back to a longer page
-  // returns to where it actually was rather than to the short page's bottom.
-  const desiredScrollRef = useRef(0);
-
   function onScroll() {
     const el = containerRef.current;
     if (!el) return;
-    const i = Math.round(el.scrollLeft / el.clientWidth);
-    pageIndexRef.current = i;
-    setPage(i);
+    setPage(Math.round(el.scrollLeft / el.clientWidth));
   }
-
-  /** Lines every other page up with the shared offset. Skips the page in
-   * front of you, so its scroll position — the one the shared offset is read
-   * from — is never written by this. */
-  function carryScroll() {
-    pageRefs.current.forEach((el, i) => {
-      if (!el || i === pageIndexRef.current) return;
-      el.scrollTop = Math.min(desiredScrollRef.current, Math.max(0, el.scrollHeight - el.clientHeight));
-    });
-  }
-
-  const carryScrollRef = useRef(carryScroll);
-  carryScrollRef.current = carryScroll;
 
   function goTo(i: number) {
-    const el = containerRef.current;
-    if (!el) return;
-    carryScroll();
-    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+    containerRef.current?.scrollTo({ left: i * containerRef.current.clientWidth, behavior: "smooth" });
   }
 
   // touch-action is pan-y so vertical scrolling of the list below stays fully
@@ -110,9 +78,6 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
     }
 
     function onTouchStart(e: TouchEvent) {
-      // Line the neighbours up now, while they're still off-screen — by the
-      // time the gesture is known to be horizontal one is already visible.
-      carryScrollRef.current();
       const t = e.touches[0];
       startX = lastX = t.clientX;
       startY = t.clientY;
@@ -198,8 +163,8 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
   }, []);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex shrink-0 justify-center gap-1.5 pb-1 pt-1">
+    <div className="flex flex-col">
+      <div className="flex justify-center gap-1.5 pb-1 pt-1">
         {PAGES.map((p, i) => (
           <button
             key={p.key}
@@ -212,22 +177,11 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
       <div
         ref={containerRef}
         onScroll={onScroll}
-        className="flex min-h-0 flex-1 overflow-x-auto"
+        className="flex overflow-x-auto"
         style={{ scrollbarWidth: "none", touchAction: "pan-y" }}
       >
         {PAGES.map((p, i) => (
-          <div
-            key={p.key}
-            ref={(el) => {
-              pageRefs.current[i] = el;
-            }}
-            className="h-full w-full shrink-0 overflow-y-auto overscroll-contain"
-            onScroll={(e) => {
-              // Only the page actually in front of you moves the shared
-              // offset; the others are being written to by carryScroll.
-              if (i === pageIndexRef.current) desiredScrollRef.current = e.currentTarget.scrollTop;
-            }}
-          >
+          <div key={p.key} className="w-full shrink-0">
             <ActivityRibbon type={p.key} entries={entries} />
             <EntryList entries={byPage[i]} onEdit={onEdit} />
           </div>
