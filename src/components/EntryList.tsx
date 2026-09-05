@@ -1,11 +1,12 @@
 import { useMemo } from "react";
-import { Moon, MoonStar, Sun, Pill } from "lucide-react";
+import { Baby, Moon, MoonStar, Sun, Pill } from "lucide-react";
 import { isPointType, type Entry } from "@/lib/types";
 import { colorFor, labelFor } from "@/lib/colors";
 import { fmtDayHeading, fmtDuration, fmtTime, startOfDay } from "@/lib/time";
 import { Diaper, Poop } from "./DiaperIcon";
 import { BabyBottle, Breast } from "./FeedIcons";
-import { BabyFace, Butt, HairWash } from "./BathIcons";
+import { Butt } from "./BathIcons";
+import { BabyHairless } from "./BabyIcon";
 
 // Vitamin D and iron share an icon and are told apart by colour. Sleep, feed
 // and diaper each give their sub-types their own, since nap/overnight,
@@ -17,7 +18,9 @@ function iconFor(entry: Entry) {
   if (entry.type === "diaper") return entry.diaperType === "poopy" ? Poop : Diaper;
   if (entry.type === "bath") {
     if (entry.bathType === "butt") return Butt;
-    return entry.bathType === "hairWash" ? HairWash : BabyFace;
+    // Hair wash keeps lucide's curl; the other washes use the same face
+    // without it.
+    return entry.bathType === "hairWash" ? Baby : BabyHairless;
   }
   return entry.feedType === "formula" ? BabyBottle : Breast;
 }

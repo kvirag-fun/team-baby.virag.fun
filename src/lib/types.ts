@@ -6,7 +6,7 @@ export type FeedSide = "left" | "right";
 /** What was in the bottle. Null on a boob feed, and on any bottle logged
  * before this was tracked. Distinct from feedType, which says how the feed
  * happened rather than what it was. */
-export type BottleContent = "milk" | "formula";
+export type BottleContent = "breastmilk" | "formula";
 export type SleepType = "nap" | "overnight";
 export type SupplementType = "vitaminD" | "iron";
 export type DiaperType = "wet" | "poopy";

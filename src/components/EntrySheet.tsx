@@ -2,7 +2,7 @@ import { useState } from "react";
 import { SunMoon, Pill, Trash2, X } from "lucide-react";
 import { Diaper } from "./DiaperIcon";
 import { Breast } from "./FeedIcons";
-import { BabyFace } from "./BathIcons";
+import { BabyHairless } from "./BabyIcon";
 import {
   isPointType,
   type AmountUnit,
@@ -32,7 +32,7 @@ const TYPE_OPTIONS: { key: Kind; label: string; icon: typeof SunMoon; active: st
   { key: "feed", label: "Feed", icon: Breast, active: "bg-emerald-500 text-white" },
   { key: "diaper", label: "Diaper", icon: Diaper, active: "bg-sky-500 text-white" },
   { key: "supplement", label: "Supplement", icon: Pill, active: "bg-red-500 text-white" },
-  { key: "bath", label: "Bath", icon: BabyFace, active: "bg-fuchsia-500 text-white" },
+  { key: "bath", label: "Bath", icon: BabyHairless, active: "bg-fuchsia-500 text-white" },
 ];
 
 const BATH_KINDS: { key: BathType; label: string; active: string }[] = [
@@ -78,7 +78,7 @@ export function EntrySheet({
   // with one picked rather than offering "neither". Older entries logged
   // before sides were tracked open on the default too.
   const [feedSide, setFeedSide] = useState<FeedSide>(initial?.feedSide ?? "left");
-  const [bottleContent, setBottleContent] = useState<BottleContent>(initial?.bottleContent ?? "milk");
+  const [bottleContent, setBottleContent] = useState<BottleContent>(initial?.bottleContent ?? "breastmilk");
   const [supplementType, setSupplementType] = useState<SupplementType>(initial?.supplementType ?? "vitaminD");
   const [diaperType, setDiaperType] = useState<DiaperType>(initial?.diaperType ?? "wet");
   const [bathType, setBathType] = useState<BathType>(initial?.bathType ?? "bath");
@@ -255,7 +255,7 @@ export function EntrySheet({
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
-                  {(["milk", "formula"] as const).map((c) => (
+                  {(["breastmilk", "formula"] as const).map((c) => (
                     <button
                       key={c}
                       onClick={() => setBottleContent(c)}

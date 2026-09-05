@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Loader2, Moon, MoonStar, Sun, Pill, X, type LucideIcon } from "lucide-react";
+import { Baby, Loader2, Moon, MoonStar, Sun, Pill, X, type LucideIcon } from "lucide-react";
 import type { Entry } from "@/lib/types";
 import { Diaper, Poop } from "./DiaperIcon";
-import { BabyFace, Butt, HairWash } from "./BathIcons";
+import { Butt } from "./BathIcons";
+import { BabyHairless } from "./BabyIcon";
 import { BabyBottle, Breast } from "./FeedIcons";
 import { findOpenEntry, logBath, logDiaper, logFeed, logSupplement, startAwake, startSleep, stopEntry } from "@/lib/activity";
 import { fmtDuration, fmtTime } from "@/lib/time";
@@ -162,7 +163,7 @@ function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
 
   async function log(
     feedType: "formula" | "breastmilk",
-    details: { feedSide?: "left" | "right"; bottleContent?: "milk" | "formula" },
+    details: { feedSide?: "left" | "right"; bottleContent?: "breastmilk" | "formula" },
   ) {
     setBusy(true);
     try {
@@ -181,7 +182,7 @@ function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
             { label: "Right", onClick: () => log("breastmilk", { feedSide: "right" }) },
           ] as const)
         : ([
-            { label: "Milk", onClick: () => log("formula", { bottleContent: "milk" }) },
+            { label: "Breastmilk", onClick: () => log("formula", { bottleContent: "breastmilk" }) },
             { label: "Formula", onClick: () => log("formula", { bottleContent: "formula" }) },
           ] as const);
     const icon = asking === "boob" ? Breast : BabyBottle;
@@ -274,8 +275,8 @@ function BathRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
     <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className="grid grid-cols-3 gap-2">
         <QuickButton icon={Butt} label="Butt" bg="bg-fuchsia-500" text="text-fuchsia-50" busy={busy} onClick={() => log("butt")} />
-        <QuickButton icon={BabyFace} label="Body" bg="bg-fuchsia-300" text="text-fuchsia-950" busy={busy} onClick={() => log("bath")} />
-        <QuickButton icon={HairWash} label="Hair" bg="bg-fuchsia-800" text="text-fuchsia-50" busy={busy} onClick={() => log("hairWash")} />
+        <QuickButton icon={BabyHairless} label="Body" bg="bg-fuchsia-300" text="text-fuchsia-950" busy={busy} onClick={() => log("bath")} />
+        <QuickButton icon={Baby} label="Hair" bg="bg-fuchsia-800" text="text-fuchsia-50" busy={busy} onClick={() => log("hairWash")} />
       </div>
     </div>
   );

@@ -29,7 +29,9 @@ function fromDoc(id: string, data: Record<string, unknown>): Entry {
     endTime: ts(data.endTime),
     feedType: (data.feedType as Entry["feedType"]) ?? null,
     feedSide: (data.feedSide as Entry["feedSide"]) ?? null,
-    bottleContent: (data.bottleContent as Entry["bottleContent"]) ?? null,
+    // "milk" was this value's first name; entries logged under it read back
+    // as breastmilk rather than needing a migration.
+    bottleContent: data.bottleContent === "milk" ? "breastmilk" : ((data.bottleContent as Entry["bottleContent"]) ?? null),
     sleepType: (data.sleepType as Entry["sleepType"]) ?? null,
     supplementType: (data.supplementType as Entry["supplementType"]) ?? null,
     diaperType: (data.diaperType as Entry["diaperType"]) ?? null,
