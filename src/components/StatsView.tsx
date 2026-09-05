@@ -7,8 +7,8 @@ const DAY_MS = 86_400_000;
 
 type Period = "week" | "month";
 
-// Every chart stacks two sub-types of one activity in two shades of the same
-// hue, so a key is the only thing saying which shade is which.
+// Every chart stacks the sub-types of one activity in shades of the same hue,
+// so a key is the only thing saying which shade is which.
 const LEGEND_PROPS = {
   verticalAlign: "top" as const,
   align: "right" as const,
@@ -45,7 +45,9 @@ export function StatsView({ entries }: { entries: Entry[] }) {
       let iron = 0;
       let wet = 0;
       let poopy = 0;
-      let baths = 0;
+      let bathButt = 0;
+      let bathBody = 0;
+      let bathHair = 0;
       for (const e of entries) {
         if (e.type === "sleep") sleep += overlapHours(e, dayStart);
         else if (e.type === "awake") awake += overlapHours(e, dayStart);
@@ -59,7 +61,11 @@ export function StatsView({ entries }: { entries: Entry[] }) {
           } else if (e.type === "diaper") {
             if (e.diaperType === "poopy") poopy += 1;
             else wet += 1;
-          } else if (e.type === "bath") baths += 1;
+          } else if (e.type === "bath") {
+            if (e.bathType === "butt") bathButt += 1;
+            else if (e.bathType === "hairWash") bathHair += 1;
+            else bathBody += 1;
+          }
         }
       }
       return {
@@ -72,7 +78,9 @@ export function StatsView({ entries }: { entries: Entry[] }) {
         iron,
         wet,
         poopy,
-        baths,
+        bathButt,
+        bathBody,
+        bathHair,
       };
     });
   }, [entries, period]);
@@ -88,7 +96,9 @@ export function StatsView({ entries }: { entries: Entry[] }) {
       iron: sum("iron"),
       wet: sum("wet"),
       poopy: sum("poopy"),
-      baths: sum("baths"),
+      bathButt: sum("bathButt"),
+      bathBody: sum("bathBody"),
+      bathHair: sum("bathHair"),
     };
   }, [data]);
 
@@ -117,7 +127,9 @@ export function StatsView({ entries }: { entries: Entry[] }) {
         <Stat label="Poopy" value={String(totals.poopy)} color="text-amber-600" />
         <Stat label="Vitamin D" value={String(totals.vitaminD)} color="text-red-300" />
         <Stat label="Iron" value={String(totals.iron)} color="text-red-500" />
-        <Stat label="Baths" value={String(totals.baths)} color="text-fuchsia-400" />
+        <Stat label="Butt" value={String(totals.bathButt)} color="text-fuchsia-500" />
+        <Stat label="Body" value={String(totals.bathBody)} color="text-fuchsia-300" />
+        <Stat label="Hair" value={String(totals.bathHair)} color="text-fuchsia-700" />
       </div>
 
       <div>
@@ -189,8 +201,6 @@ export function StatsView({ entries }: { entries: Entry[] }) {
       </div>
 
       <div>
-        {/* One series, so no key needed — the other charts stack two shades
-            of a hue and can't be read without one. */}
         <h3 className="mb-2 text-sm font-medium text-slate-400">Baths per day</h3>
         <div className="h-40 w-full">
           <ResponsiveContainer>
@@ -199,7 +209,10 @@ export function StatsView({ entries }: { entries: Entry[] }) {
               <XAxis dataKey="label" stroke="#64748b" fontSize={11} interval={period === "month" ? 4 : 0} />
               <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
-              <Bar dataKey="baths" name="Baths" fill="#d946ef" radius={[4, 4, 0, 0]} />
+              <Legend {...LEGEND_PROPS} />
+              <Bar dataKey="bathButt" name="Butt" stackId="b" fill="#d946ef" />
+              <Bar dataKey="bathBody" name="Body" stackId="b" fill="#f0abfc" />
+              <Bar dataKey="bathHair" name="Hair" stackId="b" fill="#86198f" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
