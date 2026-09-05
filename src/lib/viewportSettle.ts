@@ -1,17 +1,18 @@
-/** How long settle mode stays armed before backing off. The page behaves
- * slightly differently while it's on, so it runs in bursts rather than
- * staying on indefinitely. */
-const ARMED_MS = 8000;
+/** How long to keep scrolling the document by hand. Each attempt moves the
+ * page and puts it back, which is invisible while the app is still booting
+ * but would read as a twitch once there's something on screen — so the
+ * attempts stop while settle mode itself stays armed, leaving the user's own
+ * swipe able to do the same job. */
+const KICKS = 10;
 
-/** How long to leave it alone after a burst that didn't work. Without this the
- * periodic check re-arms on the very next tick and the burst never ends. A
- * touch skips the wait, since a gesture is the thing most likely to succeed. */
-const COOLDOWN_MS = 30000;
+/** How long one attempt holds the scrolled position. An instant there-and-back
+ * inside a single task doesn't register as a scroll at all. */
+const KICK_HOLD_MS = 150;
 
-/** How long the bottom bar stays hidden waiting for the window to be resized.
- * Long enough for the resize to land before anything is painted, short enough
- * that a device where it never lands isn't left without a nav. */
-const HIDE_MS = 800;
+/** The longest the bottom bar is kept hidden waiting for the window to be
+ * resized. It is revealed the moment that happens; this is only the backstop
+ * for a device where it never does, which should still have a nav. */
+const HIDE_CAP_MS = 4000;
 
 function isStandalone() {
   return (
@@ -84,57 +85,60 @@ export function startViewportSettle() {
   hider.textContent = "[data-bottom-nav] { visibility: hidden; }";
   document.head.appendChild(hider);
   const reveal = () => hider.remove();
-  window.setTimeout(reveal, HIDE_MS);
 
+  const startedAt = Date.now();
   let armed = false;
-  let backOff = 0;
-  let cooldownUntil = 0;
+  let kicksLeft = KICKS;
 
   const missing = () => Math.max(1, window.screen.height - window.innerHeight);
 
-  const disarm = (cooldown = false) => {
-    if (cooldown) cooldownUntil = Date.now() + COOLDOWN_MS;
+  const disarm = () => {
     if (!armed) return;
     armed = false;
-    window.clearTimeout(backOff);
     style.remove();
     window.scrollTo(0, 0);
-    reveal();
   };
 
-  // Two frames apart, so the scrolled position is actually laid out instead of
-  // being undone within the same task — which is what made an earlier attempt
-  // a no-op.
   const kick = () => {
-    if (!armed) return;
+    if (!armed || kicksLeft <= 0) return;
+    kicksLeft -= 1;
+    // Read a layout property first: this runs before the first render, so the
+    // stylesheet that makes the document scrollable may not have been applied
+    // yet, and scrolling a document with no extent is a silent no-op.
+    void document.documentElement.scrollHeight;
     window.scrollTo(0, missing());
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        if (armed) window.scrollTo(0, 0);
-      }),
-    );
+    window.setTimeout(() => {
+      if (armed) window.scrollTo(0, 0);
+    }, KICK_HOLD_MS);
   };
 
   const arm = () => {
-    if (armed || Date.now() < cooldownUntil) return;
+    if (armed) return;
     armed = true;
     style.textContent = settleCss(missing());
     document.head.appendChild(style);
-    backOff = window.setTimeout(() => disarm(true), ARMED_MS);
     kick();
   };
 
   const check = () => {
-    if (isShort()) arm();
-    else disarm();
+    if (!isShort()) {
+      disarm();
+      reveal();
+      return;
+    }
+    arm();
+    kick();
+    // Hiding the bar is only better than showing it in the wrong place for so
+    // long. Note this is measured against the window settling, not against a
+    // stopwatch from boot: the bar doesn't mount until sign-in and the first
+    // entries have loaded, which on a cold launch is well after boot — an
+    // earlier version expired before the bar existed and so never hid it.
+    if (Date.now() - startedAt > HIDE_CAP_MS) reveal();
   };
 
-  // A gesture is the thing most likely to make iOS resize, so a touch always
-  // gets a fresh attempt regardless of where the cooldown stands.
-  const onTouch = () => {
-    cooldownUntil = 0;
-    check();
-  };
+  // While armed the user's own swipe chains to the document and does the same
+  // job, so a touch only needs to make sure settle mode is on.
+  const onTouch = check;
 
   window.setInterval(check, 300);
   // A touch re-arms after a back-off, so the app still heals itself later on

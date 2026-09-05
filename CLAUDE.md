@@ -244,6 +244,16 @@ Symptom: on first startup the bottom bar hangs above the screen edge with a
 band under it. Swiping fixes it — but only on a page with nothing to scroll.
 On a page with a full list, pulling past the end does nothing.
 
+### Where the regression came from
+
+Commit `40234c5` ("Give each log page its own scroll instead of one document
+scroll") changed the shell from `min-h-dvh ... pb-24` to `h-dvh ...
+overflow-hidden`. Before it, the whole app was one document taller than the
+viewport, so a document scroll was always available and iOS resized the window
+on its own — the bar was never wrong. Making each page scroll separately (to
+kill the dead space on short pages) left the document exactly viewport-height
+and unscrollable, which is what exposed all of the below.
+
 ### What's actually happening
 
 `index.html` sets `viewport-fit=cover` with a black-translucent status bar. On
@@ -295,19 +305,28 @@ that moment, and a zero there would make the rule silently do nothing.
 
 **Call it from `main.tsx` before the first render, never from an effect.**
 React effects run after paint, so the bar was painted in the wrong place and
-then visibly jumped down once the resize landed. Starting before render puts
-the resize in flight before anything is on screen, and the bar is held
-`visibility: hidden` for up to 800ms so it appears in its final position
-rather than moving into it. It reveals as soon as the window is resized, and
-unconditionally at 800ms so a device where this never works still has a nav.
+then visibly jumped down once the resize landed.
 
-It disarms the instant the window matches the screen. If it doesn't work it
-backs off after 8s **and then holds a 30s cooldown** — without that cooldown
-the periodic check re-arms on the next tick and the burst never actually ends,
-leaving the document permanently scrollable. A touch clears the cooldown, a
-gesture being the thing most likely to succeed. Guarded to standalone
-portrait, and skipped while an input is focused (an open keyboard shortens the
-window too, and that is a different bug).
+**Hide the bar until the window is resized — not for a fixed time from boot.**
+A version that revealed 800ms after startup did nothing at all: `App` returns
+`null` while auth loads and the nav doesn't mount until the first entries
+arrive, which on a cold launch is later than that. The timer expired before
+the bar existed, so it mounted in the wrong place and jumped exactly as
+before. The reveal is now driven by the window matching the screen, with a 4s
+backstop so a device where this never works still gets a nav.
+
+Two details in the scrolling itself, both of which silently defeated earlier
+versions: read a layout property before scrolling (this runs before the first
+render, so the stylesheet may not be applied yet and scrolling a document with
+no extent is a no-op), and hold the scrolled position ~150ms rather than
+returning within the same task, which doesn't register as a scroll.
+
+It stays armed the whole time the window is short — that is the state the app
+was in before the regression, and it's what lets the user's own swipe chain to
+the document. Only the *programmatic* attempts are capped, at 10: past that
+the page would visibly twitch now that there's something on screen. Guarded to
+standalone portrait, and skipped while an input is focused (an open keyboard
+shortens the window too, and that is a different bug).
 
 Failing here costs the cosmetic gap and nothing else. Never reintroduce a
 transform to "help" — that trades the gap for a clipped, unusable nav.
