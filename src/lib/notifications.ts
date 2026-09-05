@@ -1,9 +1,63 @@
 import { getToken } from "firebase/messaging";
-import { collection, deleteDoc, doc, getDocs, query, serverTimestamp, setDoc, where } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from "firebase/firestore";
+import type { EntryType } from "./types";
 import { db, messagingPromise } from "./firebase";
 import { getDeviceId } from "./device";
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+
+/** Which activities this phone wants pushed to it. Kept per device rather
+ * than in shared settings, so the two of you can want different things, and
+ * stored on the device's own doc — which the Cloud Function already reads to
+ * build its send list — rather than in a new collection needing new rules.
+ *
+ * Absent means all of them: a phone that has never opened this sheet, and
+ * every device registered before the feature existed, behave as before. */
+export type NotificationTypes = Record<EntryType, boolean>;
+
+export const ALL_NOTIFICATION_TYPES: NotificationTypes = {
+  sleep: true,
+  awake: true,
+  feed: true,
+  supplement: true,
+  diaper: true,
+  bath: true,
+};
+
+function typesFrom(data: Record<string, unknown> | undefined): NotificationTypes {
+  const stored = (data?.types ?? {}) as Partial<NotificationTypes>;
+  return { ...ALL_NOTIFICATION_TYPES, ...stored };
+}
+
+/** This device's doc, found by its stable deviceId rather than by push token,
+ * which iOS rotates on its own. */
+function thisDeviceQuery() {
+  return query(collection(db, "devices"), where("deviceId", "==", getDeviceId()));
+}
+
+export function subscribeNotificationTypes(
+  onChange: (types: NotificationTypes) => void,
+  onError: (err: Error) => void,
+) {
+  return onSnapshot(thisDeviceQuery(), (snap) => onChange(typesFrom(snap.docs[0]?.data())), onError);
+}
+
+/** No-op when this device has no doc yet — that only happens while
+ * notifications are off, when these toggles are disabled anyway. */
+export async function setNotificationTypes(types: NotificationTypes) {
+  const snap = await getDocs(thisDeviceQuery());
+  await Promise.all(snap.docs.map((d) => setDoc(d.ref, { types }, { merge: true })));
+}
 
 function firebaseConfigQuery() {
   return new URLSearchParams({
@@ -34,10 +88,14 @@ async function upsertDeviceToken(token: string, deviceId: string): Promise<void>
   await Promise.all(priorTokens.docs.filter((d) => d.id !== token).map((d) => deleteDoc(d.ref)));
 
   const existing = priorTokens.docs.find((d) => d.id === token);
+  // Carry the notification preferences across a token rotation — otherwise a
+  // rotation iOS did on its own would silently reset them.
+  const carried = priorTokens.docs.map((d) => d.data().types).find(Boolean);
   await setDoc(doc(db, "devices", token), {
     deviceId,
     createdAt: existing?.data().createdAt ?? serverTimestamp(),
     lastSeen: serverTimestamp(),
+    ...(carried ? { types: carried } : {}),
   });
 }
 

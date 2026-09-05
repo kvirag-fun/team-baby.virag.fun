@@ -77,8 +77,17 @@ exports.notifyOnNewEntry = onCall({ region: REGION }, async (request) => {
     const data = d.data();
     if (data.deviceId === entry.deviceId) continue;
     const lastSeenMs = (data.lastSeen ?? data.createdAt)?.toMillis?.() ?? 0;
-    if (now - lastSeenMs > STALE_DEVICE_MS) abandoned.push(d.ref);
-    else tokens.push(d.id);
+    // Staleness is judged before preferences: a device that has aged out
+    // should be pruned whether or not it wanted this particular activity.
+    if (now - lastSeenMs > STALE_DEVICE_MS) {
+      abandoned.push(d.ref);
+      continue;
+    }
+    // Per-device choice of which activities to be told about. Absent, or
+    // absent for this one, means yes — so a device registered before this
+    // existed keeps getting everything.
+    if (data.types?.[entry.type] === false) continue;
+    tokens.push(d.id);
   }
   await Promise.all(abandoned.map((ref) => ref.delete()));
   if (tokens.length === 0) return { sent: 0 };
