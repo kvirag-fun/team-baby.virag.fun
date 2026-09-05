@@ -101,7 +101,7 @@ export function EntryList({
                     {/* A feed carries at most one of these — a side for a
                         boob feed, a content for a bottle. */}
                     {(entry.feedSide ?? entry.bottleContent) && (
-                      <span className="shrink-0 rounded-full border border-slate-600 px-2.5 py-0.5 text-xs capitalize text-slate-300">
+                      <span className="shrink-0 rounded-full border border-slate-600 px-3 py-[0.15rem] text-[0.9rem] capitalize text-slate-300">
                         {entry.feedSide ?? entry.bottleContent}
                       </span>
                     )}

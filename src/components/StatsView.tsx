@@ -85,20 +85,19 @@ export function StatsView({ entries }: { entries: Entry[] }) {
     });
   }, [entries, period]);
 
+  // One number per activity. Sleep and awake stay apart because they are
+  // opposites rather than sub-types of one thing; everywhere else the split
+  // belongs to the chart below, which shows it per day and in colour.
   const totals = useMemo(() => {
-    const sum = (key: keyof (typeof data)[number]) => data.reduce((s, d) => s + (d[key] as number), 0);
+    const sum = (...keys: (keyof (typeof data)[number])[]) =>
+      data.reduce((s, d) => s + keys.reduce((k, key) => k + (d[key] as number), 0), 0);
     return {
       sleep: sum("sleep"),
       awake: sum("awake"),
-      breastmilk: sum("breastmilk"),
-      formula: sum("formula"),
-      vitaminD: sum("vitaminD"),
-      iron: sum("iron"),
-      wet: sum("wet"),
-      poopy: sum("poopy"),
-      bathButt: sum("bathButt"),
-      bathBody: sum("bathBody"),
-      bathHair: sum("bathHair"),
+      feeds: sum("breastmilk", "formula"),
+      diapers: sum("wet", "poopy"),
+      supplements: sum("vitaminD", "iron"),
+      baths: sum("bathButt", "bathBody", "bathHair"),
     };
   }, [data]);
 
@@ -116,20 +115,15 @@ export function StatsView({ entries }: { entries: Entry[] }) {
         ))}
       </div>
 
-      {/* Three across: a phone can't fit more without clipping the longer
-          single-word labels. */}
+      {/* Three across, so the six sit as two even rows. Each is one
+          activity's total; the per-type breakdown is the charts' job. */}
       <div className="grid grid-cols-3 gap-2">
         <Stat label="Sleep" value={`${totals.sleep.toFixed(1)}h`} color="text-indigo-300" />
         <Stat label="Awake" value={`${totals.awake.toFixed(1)}h`} color="text-amber-300" />
-        <Stat label="Boob" value={String(totals.breastmilk)} color="text-emerald-500" />
-        <Stat label="Bottle" value={String(totals.formula)} color="text-emerald-300" />
-        <Stat label="Wet" value={String(totals.wet)} color="text-sky-300" />
-        <Stat label="Poopy" value={String(totals.poopy)} color="text-amber-600" />
-        <Stat label="Vitamin D" value={String(totals.vitaminD)} color="text-red-300" />
-        <Stat label="Iron" value={String(totals.iron)} color="text-red-500" />
-        <Stat label="Butt" value={String(totals.bathButt)} color="text-fuchsia-500" />
-        <Stat label="Body" value={String(totals.bathBody)} color="text-fuchsia-300" />
-        <Stat label="Hair" value={String(totals.bathHair)} color="text-fuchsia-700" />
+        <Stat label="Feeds" value={String(totals.feeds)} color="text-emerald-400" />
+        <Stat label="Diapers" value={String(totals.diapers)} color="text-sky-400" />
+        <Stat label="Supplements" value={String(totals.supplements)} color="text-red-400" />
+        <Stat label="Baths" value={String(totals.baths)} color="text-fuchsia-400" />
       </div>
 
       <div>
