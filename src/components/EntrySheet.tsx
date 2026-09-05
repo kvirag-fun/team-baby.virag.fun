@@ -22,11 +22,6 @@ import { useSheetScrollLock } from "@/hooks/useSheetScrollLock";
 // separate kinds, so they share a single button here and are chosen between
 // below — matching how the log page presents them. Its icon is a moon and a
 // sun in one, since it covers both.
-/** Shared by the two datetime fields. Padding and text are a step down from
- * the sheet's other controls because these sit two-to-a-row on a phone, where
- * a full-width control's sizing would clip the date. */
-const FIELD_CLASS = "w-full min-w-0 rounded-lg border border-slate-700 bg-slate-900 px-2 py-2 text-sm text-slate-100";
-
 type Kind = "sleep" | "feed" | "diaper" | "supplement" | "bath";
 type SleepKind = SleepType | "awake";
 
@@ -86,10 +81,6 @@ export function EntrySheet({
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const panelRef = useSheetScrollLock<HTMLDivElement>();
-
-  // A point-in-time entry has no end, and an ongoing one doesn't have one yet;
-  // in both cases the start field takes the whole row on its own.
-  const showEnd = !isPointType(type) && !ongoing;
 
   async function save() {
     setBusy(true);
@@ -160,43 +151,39 @@ export function EntrySheet({
             ))}
           </div>
 
-          {/* Start and end sit side by side, so a span reads as one thing.
-              min-w-0 lets the columns shrink to the grid track instead of
-              being forced wide by the date text inside them. */}
-          <div className={`grid gap-2 ${showEnd ? "grid-cols-2" : "grid-cols-1"}`}>
-            <label className="flex min-w-0 flex-col gap-1 text-sm text-slate-400">
-              {isPointType(type) ? "Time" : "Start"}
-              <input
-                type="datetime-local"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-                className={FIELD_CLASS}
-              />
-            </label>
-
-            {showEnd && (
-              <label className="flex min-w-0 flex-col gap-1 text-sm text-slate-400">
-                End
-                <input
-                  type="datetime-local"
-                  value={end}
-                  onChange={(e) => setEnd(e.target.value)}
-                  className={FIELD_CLASS}
-                />
-              </label>
-            )}
-          </div>
+          <label className="flex flex-col gap-1 text-sm text-slate-400">
+            {isPointType(type) ? "Time" : "Start"}
+            <input
+              type="datetime-local"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+            />
+          </label>
 
           {!isPointType(type) && (
-            <label className="flex items-center gap-2 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                checked={ongoing}
-                onChange={(e) => setOngoing(e.target.checked)}
-                className="h-4 w-4"
-              />
-              Still going (no end time yet)
-            </label>
+            <>
+              <label className="flex items-center gap-2 text-sm text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={ongoing}
+                  onChange={(e) => setOngoing(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                Still going (no end time yet)
+              </label>
+              {!ongoing && (
+                <label className="flex flex-col gap-1 text-sm text-slate-400">
+                  End
+                  <input
+                    type="datetime-local"
+                    value={end}
+                    onChange={(e) => setEnd(e.target.value)}
+                    className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100"
+                  />
+                </label>
+              )}
+            </>
           )}
 
           {kind === "sleep" && (
