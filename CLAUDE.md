@@ -283,8 +283,8 @@ a full list.
 
 ### The fix
 
-`src/hooks/useViewportSettle.ts` arms "settle mode" while the window is short:
-it injects a stylesheet that gives the document exactly the missing height,
+`src/lib/viewportSettle.ts` arms "settle mode" while the window is short: it
+injects a stylesheet that gives the document exactly the missing height,
 re-enables body overscroll, and neutralises `overscroll-contain`, then scrolls
 the document and lets go a frame later. That both performs the gesture and
 lets the user's own swipe through, on any page rather than only a short one.
@@ -293,10 +293,21 @@ The extra height comes from `screen.height - innerHeight`, **not**
 `env(safe-area-inset-top)` — the inset is one of the things iOS has wrong at
 that moment, and a zero there would make the rule silently do nothing.
 
-It disarms the instant the window matches the screen, and backs off after 8s
-if it doesn't, re-arming on the next touch so the app still heals later.
-Guarded to standalone portrait, and skipped while an input is focused (an open
-keyboard shortens the window too, and that is a different bug).
+**Call it from `main.tsx` before the first render, never from an effect.**
+React effects run after paint, so the bar was painted in the wrong place and
+then visibly jumped down once the resize landed. Starting before render puts
+the resize in flight before anything is on screen, and the bar is held
+`visibility: hidden` for up to 800ms so it appears in its final position
+rather than moving into it. It reveals as soon as the window is resized, and
+unconditionally at 800ms so a device where this never works still has a nav.
+
+It disarms the instant the window matches the screen. If it doesn't work it
+backs off after 8s **and then holds a 30s cooldown** — without that cooldown
+the periodic check re-arms on the next tick and the burst never actually ends,
+leaving the document permanently scrollable. A touch clears the cooldown, a
+gesture being the thing most likely to succeed. Guarded to standalone
+portrait, and skipped while an input is focused (an open keyboard shortens the
+window too, and that is a different bug).
 
 Failing here costs the cosmetic gap and nothing else. Never reintroduce a
 transform to "help" — that trades the gap for a clipped, unusable nav.

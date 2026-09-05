@@ -39,7 +39,7 @@ export function BottomNav({
   // tore the nav across the middle of the list. That, not the positioning,
   // was what made it float.
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-800 bg-slate-950 pb-[env(safe-area-inset-bottom)]">
+    <nav data-bottom-nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-800 bg-slate-950 pb-[env(safe-area-inset-bottom)]">
       <div className="relative mx-auto flex max-w-md items-center">
         {item("timeline", ListChecks, "Log")}
         {item("calendar", CalendarDays, "Calendar")}
