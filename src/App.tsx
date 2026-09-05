@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEntries } from "@/hooks/useEntries";
 import { LoginScreen } from "@/components/LoginScreen";
 import { AppHeader } from "@/components/AppHeader";
-import { BottomNav, type Tab } from "@/components/BottomNav";
+import { BottomNav, NAV_CLEARANCE, type Tab } from "@/components/BottomNav";
 import { LogPager } from "@/components/LogPager";
 import { CalendarView } from "@/components/CalendarView";
 import { StatsView } from "@/components/StatsView";
@@ -60,7 +60,7 @@ function AppShell({
       <AppHeader />
 
       {error && <p className="shrink-0 px-4 pb-2 text-sm text-rose-400">{error}</p>}
-      <main className="min-h-0 flex-1 overflow-hidden">
+      <main className="min-h-0 flex-1 overflow-hidden" style={{ paddingBottom: NAV_CLEARANCE }}>
         {loading ? (
           <p className="px-4 py-8 text-center text-sm text-slate-500">Loading…</p>
         ) : (
