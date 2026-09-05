@@ -3,18 +3,14 @@ import { createLucideIcon } from "lucide-react";
 // lucide has none of these, so all three are drawn through its own factory —
 // same 24x24 grid, stroke width, caps and joins as the icons beside them.
 
-/** A butt wash. The peach silhouette: a notch at the top and a full crease,
- * which is what separates it from a plain blob — the versions without the
- * notch read as a bag or a coffee bean. */
+/** A butt wash. Two near-circular arcs, each open toward the middle, with
+ * the crease between them — the closed peach and blob shapes tried first
+ * read as a bag, and arcs that swept less far came out looking like antlers.
+ * Drawn as arcs rather than curves so both cheeks are exactly round. */
 export const Butt = createLucideIcon("Butt", [
-  [
-    "path",
-    {
-      d: "M12 8.4c-1.3-2.2-3.3-2.8-5.1-2C4.8 7.3 3.7 9.6 3.7 12.8c0 4.3 3.7 7.7 8.3 7.7s8.3-3.4 8.3-7.7c0-3.2-1.1-5.5-3.2-6.4-1.8-.8-3.8-.2-5.1 2z",
-      key: "cheeks",
-    },
-  ],
-  ["path", { d: "M12 8.6V20", key: "crease" }],
+  ["path", { d: "M10.32 6.98A5.8 5.8 0 1 0 11.63 16.27", key: "left-cheek" }],
+  ["path", { d: "M13.68 6.98A5.8 5.8 0 1 1 12.37 16.27", key: "right-cheek" }],
+  ["path", { d: "M12 16.9c.1-3.9-.3-5.8-1.5-6.6", key: "crease" }],
 ]);
 
 /** A bath. A baby's face — eyes as round-capped dots, the way lucide draws
