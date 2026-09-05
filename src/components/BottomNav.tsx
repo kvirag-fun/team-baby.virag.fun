@@ -1,5 +1,5 @@
 import { CalendarDays, ListChecks, Plus, BarChart3, Lock } from "lucide-react";
-import { useLaunchRelayout } from "@/hooks/useLaunchRelayout";
+import { useBottomAnchor } from "@/hooks/useBottomAnchor";
 
 export type Tab = "timeline" | "calendar" | "stats";
 
@@ -19,10 +19,10 @@ export function BottomNav({
   onAdd: () => void;
   onLock: () => void;
 }) {
-  // iOS starts an installed PWA with a short layout viewport, which is what
-  // `bottom: 0` below resolves against — so without this the bar spends the
-  // first moment hanging above the screen edge. See useLaunchRelayout.
-  const ref = useLaunchRelayout<HTMLElement>();
+  // `bottom: 0` below is not enough on iOS: the viewport it resolves against
+  // is shorter than the screen, so the bar lands above the screen edge. This
+  // measures where it actually ended up and corrects it. See useBottomAnchor.
+  const ref = useBottomAnchor<HTMLElement>();
 
   const item = (t: Tab, Icon: typeof ListChecks, label: string) => (
     <button

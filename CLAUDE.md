@@ -238,6 +238,45 @@ which looks identical anyway — they were 95% opaque over a slate-950 page,
 so there was nothing to blur. The one remaining use is the delete-confirm
 scrim inside the entry sheet, which never scrolls.
 
+## The bottom nav sits one safe-area inset too high — don't trust the viewport
+
+Symptom: on launch the bottom bar hung above the screen edge with a band of
+background under it, then snapped into place on the first scroll.
+
+`index.html` sets `viewport-fit=cover` and a black-translucent status bar.
+On iOS that makes the window the full screen — but the viewport-height
+quantities (`100dvh`, `window.innerHeight`, `visualViewport.height`) report
+the screen *minus the top safe-area inset*, and for the first moment after an
+installed PWA launches they are shorter still. `position: fixed; bottom: 0`
+resolves against that, so the bar lands short. Scrolling made iOS re-report,
+which is why it appeared to fix itself.
+
+Measured on an iPhone 15 Pro (393×852 CSS): the nav's bottom edge sat at 794,
+i.e. 58px high — the device's top inset is 59px.
+
+Two wrong turns worth not repeating:
+
+- **Sizing the app column from a measured viewport** (`visualViewport.height`)
+  and putting the nav in normal flow at the end of it. Every one of those
+  numbers carries the same 59px shortfall, so the bar was then too high
+  *permanently* rather than just at launch. Same for `h-dvh`.
+- **Forcing a re-layout** of the nav (toggling `display`, reading
+  `offsetHeight`). An element-level relayout doesn't make iOS re-resolve the
+  containing block a fixed element is positioned against.
+
+The fix (`src/hooks/useBottomAnchor.ts`) asks no viewport anything. It reads
+where the nav actually landed with `getBoundingClientRect()`, compares that to
+`window.screen.height` — which is honest, and which iOS does not swap on
+rotation — and translates away the difference. Each pass measures the
+already-translated box, so passes converge and the transform drops back to
+zero the moment iOS starts reporting honestly. It runs on rAF for the first
+four seconds, then only on scroll/resize/rotation/foreground.
+
+Guards, all of which matter: it only acts in standalone portrait (elsewhere
+`screen.height` is not the app's height), only ever pushes the bar *down*,
+and caps the correction at 100px so a device that breaks the assumption keeps
+a visible nav instead of one shoved off-screen.
+
 ## iOS PWA stale cache
 
 Even with no general service worker, an installed home-screen PWA can
