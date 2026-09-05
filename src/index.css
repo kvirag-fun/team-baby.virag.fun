@@ -10,6 +10,31 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Portrait only. The manifest asks for it too, but iOS is not known to
+   honour that field, so this is what actually holds: a phone turned sideways
+   gets a prompt instead of a squashed layout. Bounded by max-height so it only
+   catches phones — a tablet or a desktop window in landscape is left alone.
+   The app is only hidden, never unmounted, so rotating back restores it with
+   everything still in place. */
+@media (orientation: landscape) and (max-height: 500px) {
+  #root {
+    display: none;
+  }
+
+  body::after {
+    content: "Rotate your phone upright";
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    text-align: center;
+    background: #020617;
+    color: #94a3b8;
+  }
+}
+
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
