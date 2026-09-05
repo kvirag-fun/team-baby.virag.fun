@@ -3,14 +3,15 @@ import { createLucideIcon } from "lucide-react";
 // lucide has none of these, so all three are drawn through its own factory —
 // same 24x24 grid, stroke width, caps and joins as the icons beside them.
 
-/** A butt wash. Two arcs sweeping out and down, meeting well above the point
- * each one bottoms out at, so the cheeks read as two lobes rather than one
- * blob — the closed peach shape tried first looked like a bag, and arcs that
- * met at their lowest point looked like a single heart. */
+/** A butt wash. Each cheek is a true circular arc rather than a hand-fitted
+ * curve — Béziers kept flattening along the outside and coming out blocky.
+ * They meet above the point each one bottoms out at, so the two read as
+ * separate lobes instead of one blob. Radius 6.4 about (7.4, 11.8) and its
+ * mirror, which fills the box to x 1–23 without the stroke clipping. */
 export const Butt = createLucideIcon("Butt", [
-  ["path", { d: "M6 3.5C1.2 5.6 0 14.6 4.8 17.9c2.2 1.6 5.4-3 7.2-3.6", key: "left-cheek" }],
-  ["path", { d: "M18 3.5c4.8 2.1 6 11.1 1.2 14.4-2.2 1.6-5.4-3-7.2-3.6", key: "right-cheek" }],
-  ["path", { d: "M12 14.3c.1-2.6-.3-4.6-1.6-6", key: "crease" }],
+  ["path", { d: "M5.21 5.79A6.4 6.4 0 1 0 12 16.25", key: "left-cheek" }],
+  ["path", { d: "M18.79 5.79A6.4 6.4 0 1 1 12 16.25", key: "right-cheek" }],
+  ["path", { d: "M12 16.25c.1-2.6-.3-4.6-1.6-6", key: "crease" }],
 ]);
 
 /** A bath. A baby's face — eyes as round-capped dots, the way lucide draws
