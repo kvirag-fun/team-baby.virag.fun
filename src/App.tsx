@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEntries } from "@/hooks/useEntries";
-import { useViewportHeight } from "@/hooks/useViewportHeight";
 import { LoginScreen } from "@/components/LoginScreen";
 import { AppHeader } from "@/components/AppHeader";
-import { BottomNav, type Tab } from "@/components/BottomNav";
+import { BottomNav, NAV_CLEARANCE, type Tab } from "@/components/BottomNav";
 import { LogPager } from "@/components/LogPager";
 import { CalendarView } from "@/components/CalendarView";
 import { StatsView } from "@/components/StatsView";
@@ -45,7 +44,6 @@ function AppShell({
   onLock: () => void;
 }) {
   const { entries, loading, error } = useEntries();
-  const viewportHeight = useViewportHeight();
 
   async function handleSave(entry: NewEntry) {
     if (sheetEntry && sheetEntry !== "new") await updateEntry(sheetEntry.id, entry);
@@ -54,15 +52,15 @@ function AppShell({
 
   return (
     // A column the exact height of the viewport: header and nav are fixed
-    // slices of it and the middle scrolls. Height comes from a measured value
-    // rather than `dvh` because iOS reports a short viewport for a moment
-    // after launch (see useViewportHeight) — with the nav pinned to that, it
-    // floated above the screen edge until a scroll shook it loose.
-    <div className="mx-auto flex max-w-md flex-col overflow-hidden" style={{ height: viewportHeight }}>
+    // slices of it and the middle scrolls. The document itself never scrolls,
+    // so the nav sits in normal flow rather than being pinned over the
+    // content — which is also what stops it detaching when iOS reports a
+    // stale viewport height.
+    <div className="mx-auto flex h-dvh max-w-md flex-col overflow-hidden">
       <AppHeader />
 
       {error && <p className="shrink-0 px-4 pb-2 text-sm text-rose-400">{error}</p>}
-      <main className="min-h-0 flex-1 overflow-hidden">
+      <main className="min-h-0 flex-1 overflow-hidden" style={{ paddingBottom: NAV_CLEARANCE }}>
         {loading ? (
           <p className="px-4 py-8 text-center text-sm text-slate-500">Loading…</p>
         ) : (
