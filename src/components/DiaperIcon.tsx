@@ -28,9 +28,7 @@ export const Diaper = createLucideIcon("Diaper", [
 ]);
 
 /** The poopy variant. lucide has no poop either, so this is the familiar
- * three-mound pile with a pair of eyes. The eyes are round-capped zero-length
- * strokes, the way lucide draws its own dots, so they stay circular at any
- * size — they do soften to specks at the 18px the log list uses. */
+ * three-mound pile, drawn as one silhouette with no face. */
 export const Poop = createLucideIcon("Poop", [
   [
     "path",
@@ -39,5 +37,4 @@ export const Poop = createLucideIcon("Poop", [
       key: "pile",
     },
   ],
-  ["path", { d: "M10 17.5h.01M14 17.5h.01", key: "eyes" }],
 ]);
