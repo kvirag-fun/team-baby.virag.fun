@@ -3,6 +3,10 @@ export type FeedType = "formula" | "breastmilk";
 /** Which breast a breastmilk feed came from. Null on a bottle, and on any
  * breastmilk feed logged before this was tracked. */
 export type FeedSide = "left" | "right";
+/** What was in the bottle. Null on a boob feed, and on any bottle logged
+ * before this was tracked. Distinct from feedType, which says how the feed
+ * happened rather than what it was. */
+export type BottleContent = "milk" | "formula";
 export type SleepType = "nap" | "overnight";
 export type SupplementType = "vitaminD" | "iron";
 export type DiaperType = "wet" | "poopy";
@@ -25,6 +29,7 @@ export interface Entry {
   endTime: number | null;
   feedType: FeedType | null;
   feedSide: FeedSide | null;
+  bottleContent: BottleContent | null;
   sleepType: SleepType | null;
   supplementType: SupplementType | null;
   diaperType: DiaperType | null;

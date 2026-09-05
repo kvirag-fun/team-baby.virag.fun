@@ -9,6 +9,7 @@ import {
   type BathType,
   type DiaperType,
   type Entry,
+  type BottleContent,
   type EntryType,
   type FeedSide,
   type FeedType,
@@ -77,6 +78,7 @@ export function EntrySheet({
   // with one picked rather than offering "neither". Older entries logged
   // before sides were tracked open on the default too.
   const [feedSide, setFeedSide] = useState<FeedSide>(initial?.feedSide ?? "left");
+  const [bottleContent, setBottleContent] = useState<BottleContent>(initial?.bottleContent ?? "milk");
   const [supplementType, setSupplementType] = useState<SupplementType>(initial?.supplementType ?? "vitaminD");
   const [diaperType, setDiaperType] = useState<DiaperType>(initial?.diaperType ?? "wet");
   const [bathType, setBathType] = useState<BathType>(initial?.bathType ?? "bath");
@@ -97,8 +99,9 @@ export function EntrySheet({
         startTime,
         endTime: isPoint ? null : ongoing ? null : fromInputValue(end),
         feedType: type === "feed" ? feedType : null,
-        // Only a breastmilk feed has a side; a bottle never does.
+        // A feed has a side or a bottle content, never both.
         feedSide: type === "feed" && feedType === "breastmilk" ? feedSide : null,
+        bottleContent: type === "feed" && feedType === "formula" ? bottleContent : null,
         sleepType: type === "sleep" ? (sleepKind as SleepType) : null,
         supplementType: type === "supplement" ? supplementType : null,
         diaperType: type === "diaper" ? diaperType : null,
@@ -234,7 +237,9 @@ export function EntrySheet({
                 </button>
               </div>
 
-              {feedType === "breastmilk" && (
+              {/* Which breast, or what was in the bottle. Both are always
+                  set for their kind of feed, so there is no "neither". */}
+              {feedType === "breastmilk" ? (
                 <div className="grid grid-cols-2 gap-2">
                   {(["left", "right"] as const).map((s) => (
                     <button
@@ -245,6 +250,20 @@ export function EntrySheet({
                       }`}
                     >
                       {s}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {(["milk", "formula"] as const).map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setBottleContent(c)}
+                      className={`rounded-xl border py-2 text-sm font-medium capitalize ${
+                        bottleContent === c ? "border-transparent bg-emerald-300 text-emerald-950" : "border-slate-700 text-slate-400"
+                      }`}
+                    >
+                      {c}
                     </button>
                   ))}
                 </div>

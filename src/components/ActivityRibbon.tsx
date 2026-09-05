@@ -153,30 +153,48 @@ function SleepAwakeRibbon({
 // moment (with an amount). Tapping logs it immediately at the current time;
 // amount can be filled in afterward by tapping the entry below.
 //
-// Boob is the exception: it asks which side first, since that's worth knowing
-// and is impossible to reconstruct later. The question replaces the two
-// buttons in place rather than opening a sheet, so it stays two taps.
+// Feed is the exception: neither button logs straight away, because which
+// breast, and what was in the bottle, are worth knowing and can't be
+// reconstructed afterwards. The follow-up replaces the two buttons in place
+// rather than opening a sheet, so either way it stays two taps.
 function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) => void }) {
-  const [askingSide, setAskingSide] = useState(false);
+  const [asking, setAsking] = useState<"boob" | "bottle" | null>(null);
 
-  async function log(feedType: "formula" | "breastmilk", feedSide: "left" | "right" | null = null) {
+  async function log(
+    feedType: "formula" | "breastmilk",
+    details: { feedSide?: "left" | "right"; bottleContent?: "milk" | "formula" },
+  ) {
     setBusy(true);
     try {
-      await logFeed(feedType, feedSide);
-      setAskingSide(false);
+      await logFeed(feedType, details);
+      setAsking(null);
     } finally {
       setBusy(false);
     }
   }
 
-  if (askingSide) {
+  if (asking) {
+    const [a, b] =
+      asking === "boob"
+        ? ([
+            { label: "Left", onClick: () => log("breastmilk", { feedSide: "left" }) },
+            { label: "Right", onClick: () => log("breastmilk", { feedSide: "right" }) },
+          ] as const)
+        : ([
+            { label: "Milk", onClick: () => log("formula", { bottleContent: "milk" }) },
+            { label: "Formula", onClick: () => log("formula", { bottleContent: "formula" }) },
+          ] as const);
+    const icon = asking === "boob" ? Breast : BabyBottle;
+    const bg = asking === "boob" ? "bg-emerald-700" : "bg-emerald-300";
+    const text = asking === "boob" ? "text-emerald-50" : "text-emerald-950";
+
     return (
       <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
         <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-          <QuickButton icon={Breast} label="Left" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk", "left")} />
-          <QuickButton icon={Breast} label="Right" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => log("breastmilk", "right")} />
+          <QuickButton icon={icon} label={a.label} bg={bg} text={text} busy={busy} onClick={a.onClick} />
+          <QuickButton icon={icon} label={b.label} bg={bg} text={text} busy={busy} onClick={b.onClick} />
           <button
-            onClick={() => setAskingSide(false)}
+            onClick={() => setAsking(null)}
             disabled={busy}
             aria-label="Cancel"
             className="flex w-12 items-center justify-center rounded-2xl border border-slate-700 text-slate-400 disabled:opacity-60"
@@ -191,8 +209,8 @@ function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
   return (
     <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className="grid grid-cols-2 gap-2">
-        <QuickButton icon={Breast} label="Boob" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => setAskingSide(true)} />
-        <QuickButton icon={BabyBottle} label="Bottle" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => log("formula")} />
+        <QuickButton icon={Breast} label="Boob" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => setAsking("boob")} />
+        <QuickButton icon={BabyBottle} label="Bottle" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => setAsking("bottle")} />
       </div>
     </div>
   );

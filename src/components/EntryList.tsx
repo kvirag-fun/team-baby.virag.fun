@@ -98,9 +98,11 @@ export function EntryList({
                         )}
                       </span>
                     </span>
-                    {entry.feedSide && (
+                    {/* A feed carries at most one of these — a side for a
+                        boob feed, a content for a bottle. */}
+                    {(entry.feedSide ?? entry.bottleContent) && (
                       <span className="shrink-0 rounded-full border border-slate-600 px-2.5 py-0.5 text-xs capitalize text-slate-300">
-                        {entry.feedSide}
+                        {entry.feedSide ?? entry.bottleContent}
                       </span>
                     )}
                     {!isPoint && !entry.endTime && (

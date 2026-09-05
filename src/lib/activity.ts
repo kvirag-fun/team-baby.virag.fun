@@ -1,5 +1,14 @@
 import { createEntry, updateEntry } from "./entries";
-import type { BathType, DiaperType, Entry, FeedSide, FeedType, SleepType, SupplementType } from "./types";
+import type {
+  BathType,
+  BottleContent,
+  DiaperType,
+  Entry,
+  FeedSide,
+  FeedType,
+  SleepType,
+  SupplementType,
+} from "./types";
 
 /**
  * The currently-running entry of a type, if any (endTime === null means
@@ -18,6 +27,7 @@ export async function stopEntry(entry: Entry, endTime = Date.now()) {
     endTime,
     feedType: entry.feedType,
     feedSide: entry.feedSide,
+    bottleContent: entry.bottleContent,
     sleepType: entry.sleepType,
     supplementType: entry.supplementType,
     diaperType: entry.diaperType,
@@ -39,6 +49,7 @@ export async function startSleep(entries: Entry[], sleepType: SleepType) {
     endTime: null,
     feedType: null,
     feedSide: null,
+    bottleContent: null,
     sleepType,
     supplementType: null,
     diaperType: null,
@@ -60,6 +71,7 @@ export async function startAwake(entries: Entry[]) {
     endTime: null,
     feedType: null,
     feedSide: null,
+    bottleContent: null,
     sleepType: null,
     supplementType: null,
     diaperType: null,
@@ -71,13 +83,17 @@ export async function startAwake(entries: Entry[]) {
 }
 
 /** Feed is a single moment, not a tracked range — endTime is always null/unused. */
-export async function logFeed(feedType: FeedType, feedSide: FeedSide | null = null) {
+export async function logFeed(
+  feedType: FeedType,
+  details: { feedSide?: FeedSide | null; bottleContent?: BottleContent | null } = {},
+) {
   await createEntry({
     type: "feed",
     startTime: Date.now(),
     endTime: null,
     feedType,
-    feedSide,
+    feedSide: details.feedSide ?? null,
+    bottleContent: details.bottleContent ?? null,
     sleepType: null,
     supplementType: null,
     diaperType: null,
@@ -96,6 +112,7 @@ export async function logSupplement(supplementType: SupplementType) {
     endTime: null,
     feedType: null,
     feedSide: null,
+    bottleContent: null,
     sleepType: null,
     supplementType,
     diaperType: null,
@@ -114,6 +131,7 @@ export async function logDiaper(diaperType: DiaperType) {
     endTime: null,
     feedType: null,
     feedSide: null,
+    bottleContent: null,
     sleepType: null,
     supplementType: null,
     diaperType,
@@ -132,6 +150,7 @@ export async function logBath(bathType: BathType) {
     endTime: null,
     feedType: null,
     feedSide: null,
+    bottleContent: null,
     sleepType: null,
     supplementType: null,
     diaperType: null,
