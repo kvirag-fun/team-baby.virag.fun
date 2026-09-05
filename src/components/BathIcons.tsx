@@ -22,10 +22,11 @@ export const BabyFace = createLucideIcon("BabyFace", [
   ["path", { d: "M9.3 17a3.5 3.5 0 0 0 5.4 0", key: "smile" }],
 ]);
 
-/** A hair wash. No face — just the crown of the head and three tufts
- * standing off it. The tufts entirely on their own were tried and read as
- * three scratches; the scalp line is what makes them hair. */
+/** A hair wash. The same face as the bath, dropped slightly and shrunk to
+ * make room for three tufts standing up off the top of the head. */
 export const HairWash = createLucideIcon("HairWash", [
-  ["path", { d: "M4.5 19.5a7.5 7.5 0 0 1 15 0", key: "crown" }],
-  ["path", { d: "M8.4 12.4 6.9 6.6M12 11.5V5.4M15.6 12.4l1.5-5.8", key: "hair" }],
+  ["circle", { cx: "12", cy: "15", r: "7", key: "head" }],
+  ["path", { d: "M9.4 13.5h.01M14.6 13.5h.01", key: "eyes" }],
+  ["path", { d: "M9.5 17.8a3.3 3.3 0 0 0 5 0", key: "smile" }],
+  ["path", { d: "M8.6 8.6 7.4 5.4M12 8v-3.6M15.4 8.6l1.2-3.2", key: "hair" }],
 ]);
