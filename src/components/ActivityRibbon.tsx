@@ -230,7 +230,7 @@ function BathRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
     <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className="grid grid-cols-3 gap-2">
         <QuickButton icon={Butt} label="Butt" bg="bg-fuchsia-500" text="text-fuchsia-50" busy={busy} onClick={() => log("butt")} />
-        <QuickButton icon={BabyFace} label="Bath" bg="bg-fuchsia-300" text="text-fuchsia-950" busy={busy} onClick={() => log("bath")} />
+        <QuickButton icon={BabyFace} label="Body" bg="bg-fuchsia-300" text="text-fuchsia-950" busy={busy} onClick={() => log("bath")} />
         <QuickButton icon={HairWash} label="Hair wash" bg="bg-fuchsia-800" text="text-fuchsia-50" busy={busy} onClick={() => log("hairWash")} />
       </div>
     </div>

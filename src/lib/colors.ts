@@ -99,7 +99,7 @@ export function labelFor(entry: Described) {
   if (entry.type === "diaper") return entry.diaperType === "poopy" ? "Poopy" : "Wet";
   if (entry.type === "bath") {
     if (entry.bathType === "butt") return "Butt";
-    return entry.bathType === "hairWash" ? "Hair wash" : "Bath";
+    return entry.bathType === "hairWash" ? "Hair wash" : "Body";
   }
   return entry.feedType === "breastmilk" ? "Boob" : "Bottle";
 }

@@ -51,7 +51,7 @@ function describeEntry(entry) {
   }
   if (entry.type === "bath") {
     if (entry.bathType === "butt") return "Butt wash logged";
-    return entry.bathType === "hairWash" ? "Hair wash logged" : "Bath logged";
+    return entry.bathType === "hairWash" ? "Hair wash logged" : "Body wash logged";
   }
   return "New entry logged";
 }
