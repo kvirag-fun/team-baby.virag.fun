@@ -33,10 +33,26 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           VITE_FIREBASE_VAPID_KEY: ${{ secrets.FIREBASE_VAPID_KEY }}
+        # Check every secret the app can't work without, not just the project
+        # id. A missing one used to build green and fail at runtime instead —
+        # the site deploys, looks fine, and sign-in silently does nothing.
+        #
+        # The VAPID key is deliberately only a warning: without it the app is
+        # perfectly usable and just can't register for push, which already
+        # fails visibly in the app itself. Failing the build on it would mean
+        # never being able to deploy without push configured.
         run: |
-          if [ -z "$VITE_FIREBASE_PROJECT_ID" ]; then
-            echo "::error::FIREBASE_PROJECT_ID secret is missing. Add the six FIREBASE_* repository secrets (Settings -> Secrets and variables -> Actions) — see README Setup."
+          missing=""
+          for name in API_KEY AUTH_DOMAIN PROJECT_ID STORAGE_BUCKET MESSAGING_SENDER_ID APP_ID; do
+            eval "value=\$VITE_FIREBASE_$name"
+            [ -z "$value" ] && missing="$missing FIREBASE_$name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing. Add them under Settings -> Secrets and variables -> Actions — see README Setup."
             exit 1
+          fi
+          if [ -z "$VITE_FIREBASE_VAPID_KEY" ]; then
+            echo "::warning::FIREBASE_VAPID_KEY is not set — the app will build and run, but push notifications can't be registered."
           fi
           bun run build
 
