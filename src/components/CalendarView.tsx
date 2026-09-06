@@ -302,12 +302,12 @@ export function CalendarView({ entries, onEdit }: { entries: Entry[]; onEdit: (e
         <Legend color="bg-indigo-800" label="Overnight" />
         <Legend color="bg-amber-400" label="Awake" />
         <Legend color="bg-emerald-300" label="Bottle" />
-        <Legend color="bg-emerald-700" label="Boob" />
+        <Legend color="bg-emerald-700" label="Breast" />
         <Legend color="bg-sky-300" label="Wet" type="diaper" />
         <Legend color="bg-amber-700" label="Poopy" type="diaper" />
         <Legend color="bg-red-300" label="Vitamin D" type="supplement" />
         <Legend color="bg-red-800" label="Iron" type="supplement" />
-        <Legend color="bg-fuchsia-500" label="Butt" type="bath" />
+        <Legend color="bg-fuchsia-500" label="Bottom" type="bath" />
         <Legend color="bg-fuchsia-300" label="Body" type="bath" />
         <Legend color="bg-fuchsia-800" label="Hair" type="bath" />
       </div>

@@ -98,8 +98,8 @@ export function labelFor(entry: Described) {
   if (entry.type === "supplement") return entry.supplementType === "iron" ? "Iron" : "Vitamin D";
   if (entry.type === "diaper") return entry.diaperType === "poopy" ? "Poopy" : "Wet";
   if (entry.type === "bath") {
-    if (entry.bathType === "butt") return "Butt";
+    if (entry.bathType === "butt") return "Bottom";
     return entry.bathType === "hairWash" ? "Hair" : "Body";
   }
-  return entry.feedType === "breastmilk" ? "Boob" : "Bottle";
+  return entry.feedType === "breastmilk" ? "Breast" : "Bottle";
 }

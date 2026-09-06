@@ -18,10 +18,10 @@ import { useSheetScrollLock } from "@/hooks/useSheetScrollLock";
 const ROWS: { key: EntryType; label: string; hint: string }[] = [
   { key: "sleep", label: "Sleep", hint: "When a nap or overnight starts" },
   { key: "awake", label: "Awake", hint: "When awake time starts" },
-  { key: "feed", label: "Feeds", hint: "Boob and bottle" },
+  { key: "feed", label: "Feeds", hint: "Breast and bottle" },
   { key: "diaper", label: "Diapers", hint: "Wet and poopy" },
   { key: "supplement", label: "Supplements", hint: "Vitamin D and iron" },
-  { key: "bath", label: "Baths", hint: "Butt, body and hair" },
+  { key: "bath", label: "Baths", hint: "Bottom, body and hair" },
 ];
 
 /** A switch. Not an <input type="checkbox">, because this needs to look the

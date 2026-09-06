@@ -153,7 +153,7 @@ export function StatsView({ entries }: { entries: Entry[] }) {
               <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
               <Legend {...LEGEND_PROPS} />
-              <Bar dataKey="breastmilk" name="Boob" stackId="f" fill="#047857" />
+              <Bar dataKey="breastmilk" name="Breast" stackId="f" fill="#047857" />
               <Bar dataKey="formula" name="Bottle" stackId="f" fill="#6ee7b7" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -204,7 +204,7 @@ export function StatsView({ entries }: { entries: Entry[] }) {
               <YAxis stroke="#64748b" fontSize={11} width={28} allowDecimals={false} />
               <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #334155", fontSize: 12 }} />
               <Legend {...LEGEND_PROPS} />
-              <Bar dataKey="bathButt" name="Butt" stackId="b" fill="#d946ef" />
+              <Bar dataKey="bathButt" name="Bottom" stackId="b" fill="#d946ef" />
               <Bar dataKey="bathBody" name="Body" stackId="b" fill="#f0abfc" />
               <Bar dataKey="bathHair" name="Hair" stackId="b" fill="#86198f" radius={[4, 4, 0, 0]} />
             </BarChart>

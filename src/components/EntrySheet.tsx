@@ -36,7 +36,7 @@ const TYPE_OPTIONS: { key: Kind; label: string; icon: typeof SunMoon; active: st
 ];
 
 const BATH_KINDS: { key: BathType; label: string; active: string }[] = [
-  { key: "butt", label: "Butt", active: "bg-fuchsia-500 text-fuchsia-50" },
+  { key: "butt", label: "Bottom", active: "bg-fuchsia-500 text-fuchsia-50" },
   { key: "bath", label: "Body", active: "bg-fuchsia-300 text-fuchsia-950" },
   { key: "hairWash", label: "Hair", active: "bg-fuchsia-800 text-fuchsia-50" },
 ];
@@ -223,7 +223,7 @@ export function EntrySheet({
                       : "border-slate-700 text-slate-400"
                   }`}
                 >
-                  Boob
+                  Breast
                 </button>
                 <button
                   onClick={() => setFeedType("formula")}

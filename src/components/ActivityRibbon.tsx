@@ -235,7 +235,7 @@ function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
   return (
     <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className="grid grid-cols-2 gap-2">
-        <QuickButton icon={Breast} label="Boob" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => setAsking("boob")} />
+        <QuickButton icon={Breast} label="Breast" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => setAsking("boob")} />
         <QuickButton icon={BabyBottle} label="Bottle" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => setAsking("bottle")} />
       </div>
     </div>
@@ -299,7 +299,7 @@ function BathRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
   return (
     <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
       <div className="grid grid-cols-3 gap-2">
-        <QuickButton icon={Butt} label="Butt" bg="bg-fuchsia-500" text="text-fuchsia-50" busy={busy} onClick={() => log("butt")} />
+        <QuickButton icon={Butt} label="Bottom" bg="bg-fuchsia-500" text="text-fuchsia-50" busy={busy} onClick={() => log("butt")} />
         <QuickButton icon={BabyHairless} label="Body" bg="bg-fuchsia-300" text="text-fuchsia-950" busy={busy} onClick={() => log("bath")} />
         <QuickButton icon={Baby} label="Hair" bg="bg-fuchsia-800" text="text-fuchsia-50" busy={busy} onClick={() => log("hairWash")} />
       </div>

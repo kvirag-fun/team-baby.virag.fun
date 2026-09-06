@@ -38,7 +38,7 @@ function describeEntry(entry) {
     return done ? "Awake time logged" : "Awake started";
   }
   if (entry.type === "feed") {
-    const label = entry.feedType === "breastmilk" ? "Boob" : "Bottle";
+    const label = entry.feedType === "breastmilk" ? "Breast" : "Bottle";
     const amount = entry.amount ? ` (${entry.amount}${entry.amountUnit ?? ""})` : "";
     return `${label} logged${amount}`;
   }
@@ -50,7 +50,7 @@ function describeEntry(entry) {
     return entry.diaperType === "poopy" ? "Poopy diaper logged" : "Wet diaper logged";
   }
   if (entry.type === "bath") {
-    if (entry.bathType === "butt") return "Butt wash logged";
+    if (entry.bathType === "butt") return "Bottom wash logged";
     return entry.bathType === "hairWash" ? "Hair wash logged" : "Body wash logged";
   }
   return "New entry logged";
