@@ -55,11 +55,23 @@ export function LoginScreen({
         <h1 className="text-xl font-semibold">Team Baby</h1>
         <p className="text-sm text-slate-400">Sign in to continue</p>
       </div>
+      {/* Shaped for iOS AutoFill, which needs more than the right input types:
+          a real form, `name` and `id` on both fields, and the documented
+          username/current-password pairing. `autocomplete="email"` describes a
+          newsletter box, not a login, and on its own the Passwords app often
+          declines to offer anything. */}
       <form onSubmit={submit} className="flex w-full max-w-xs flex-col gap-3">
         <input
           type="email"
+          id="email"
+          name="email"
           autoFocus
-          autoComplete="email"
+          autoComplete="username"
+          inputMode="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-label="Email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -67,7 +79,13 @@ export function LoginScreen({
         />
         <input
           type="password"
+          id="current-password"
+          name="password"
           autoComplete="current-password"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-label="Password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
