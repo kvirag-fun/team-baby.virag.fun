@@ -39,19 +39,39 @@ function QuickButton({
 
 export function ActivityRibbon({
   type,
+  label,
   entries,
 }: {
   type: "sleep" | "feed" | "supplement" | "diaper" | "bath";
+  /** The page's name, shown above the quick actions. Passed in rather than
+   * mapped here so LogPager's PAGES stays the one place naming them. */
+  label: string;
   entries: Entry[];
 }) {
   useTick();
   const [busy, setBusy] = useState(false);
 
-  if (type === "feed") return <FeedRibbon busy={busy} setBusy={setBusy} />;
-  if (type === "supplement") return <SupplementRibbon busy={busy} setBusy={setBusy} />;
-  if (type === "diaper") return <DiaperRibbon busy={busy} setBusy={setBusy} />;
-  if (type === "bath") return <BathRibbon busy={busy} setBusy={setBusy} />;
-  return <SleepAwakeRibbon entries={entries} busy={busy} setBusy={setBusy} />;
+  const body =
+    type === "feed" ? (
+      <FeedRibbon busy={busy} setBusy={setBusy} />
+    ) : type === "supplement" ? (
+      <SupplementRibbon busy={busy} setBusy={setBusy} />
+    ) : type === "diaper" ? (
+      <DiaperRibbon busy={busy} setBusy={setBusy} />
+    ) : type === "bath" ? (
+      <BathRibbon busy={busy} setBusy={setBusy} />
+    ) : (
+      <SleepAwakeRibbon entries={entries} busy={busy} setBusy={setBusy} />
+    );
+
+  // The sticky shell lives here rather than in each sub-ribbon, so the title
+  // is written once and stays put while the list scrolls under it.
+  return (
+    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
+      <h2 className="pb-2 text-sm font-medium text-slate-400">{label}</h2>
+      {body}
+    </div>
+  );
 }
 
 // Overnight is only offered as a quick-start in the evening/night window
@@ -110,7 +130,7 @@ function SleepAwakeRibbon({
     const ConvertIcon = isOvernight ? Moon : MoonStar;
 
     return (
-      <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
+      <div>
         <div className="grid grid-cols-4 gap-2">
           <button
             onClick={next}
@@ -163,7 +183,7 @@ function SleepAwakeRibbon({
   // deleting whatever was open. All three, so any state can be started.
   const overnight = isOvernightAvailable();
   return (
-    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
+    <div>
       <div className={`grid gap-2 ${overnight ? "grid-cols-3" : "grid-cols-2"}`}>
         <QuickButton icon={Moon} label="Nap" bg="bg-indigo-400" text="text-indigo-950" busy={busy} onClick={() => run(() => startSleep(entries, "nap"))} />
         {overnight && (
@@ -215,7 +235,7 @@ function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
     const text = asking === "boob" ? "text-emerald-50" : "text-emerald-950";
 
     return (
-      <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
+      <div>
         <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
           <QuickButton icon={icon} label={a.label} bg={bg} text={text} busy={busy} onClick={a.onClick} />
           <QuickButton icon={icon} label={b.label} bg={bg} text={text} busy={busy} onClick={b.onClick} />
@@ -233,7 +253,7 @@ function FeedRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
   }
 
   return (
-    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
+    <div>
       <div className="grid grid-cols-2 gap-2">
         <QuickButton icon={Breast} label="Breast" bg="bg-emerald-700" text="text-emerald-50" busy={busy} onClick={() => setAsking("boob")} />
         <QuickButton icon={BabyBottle} label="Bottle" bg="bg-emerald-300" text="text-emerald-950" busy={busy} onClick={() => setAsking("bottle")} />
@@ -254,7 +274,7 @@ function SupplementRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boole
   }
 
   return (
-    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
+    <div>
       <div className="grid grid-cols-2 gap-2">
         <QuickButton icon={Pill} label="Vitamin D" bg="bg-red-300" text="text-red-950" busy={busy} onClick={() => log("vitaminD")} />
         <QuickButton icon={Pill} label="Iron" bg="bg-red-800" text="text-red-50" busy={busy} onClick={() => log("iron")} />
@@ -275,7 +295,7 @@ function DiaperRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) 
   }
 
   return (
-    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
+    <div>
       <div className="grid grid-cols-2 gap-2">
         <QuickButton icon={Diaper} label="Wet" bg="bg-sky-300" text="text-sky-950" busy={busy} onClick={() => log("wet")} />
         <QuickButton icon={Poop} label="Poopy" bg="bg-amber-700" text="text-amber-50" busy={busy} onClick={() => log("poopy")} />
@@ -297,7 +317,7 @@ function BathRibbon({ busy, setBusy }: { busy: boolean; setBusy: (b: boolean) =>
   }
 
   return (
-    <div className="sticky top-0 z-10 bg-slate-950 px-4 pb-3 pt-3">
+    <div>
       <div className="grid grid-cols-3 gap-2">
         <QuickButton icon={Butt} label="Bottom" bg="bg-fuchsia-500" text="text-fuchsia-50" busy={busy} onClick={() => log("butt")} />
         <QuickButton icon={BabyHairless} label="Body" bg="bg-fuchsia-300" text="text-fuchsia-950" busy={busy} onClick={() => log("bath")} />

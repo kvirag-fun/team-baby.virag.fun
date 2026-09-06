@@ -10,10 +10,10 @@ import { EntryList } from "./EntryList";
 // them), so they share one page rather than being split across two.
 const PAGES: { key: "sleep" | "feed" | "supplement" | "diaper" | "bath"; label: string; dot: string; types: EntryType[] }[] = [
   { key: "sleep", label: "Sleep & awake", dot: "bg-indigo-400", types: ["sleep", "awake"] },
-  { key: "feed", label: "Feed", dot: "bg-emerald-400", types: ["feed"] },
+  { key: "feed", label: "Feeds", dot: "bg-emerald-400", types: ["feed"] },
   { key: "diaper", label: "Diapers", dot: "bg-sky-400", types: ["diaper"] },
   { key: "supplement", label: "Supplements", dot: "bg-red-400", types: ["supplement"] },
-  { key: "bath", label: "Bath", dot: "bg-fuchsia-400", types: ["bath"] },
+  { key: "bath", label: "Baths", dot: "bg-fuchsia-400", types: ["bath"] },
 ];
 
 /** How many days back the log pages go: today, yesterday, the day before.
@@ -202,7 +202,7 @@ export function LogPager({ entries, onEdit }: { entries: Entry[]; onEdit: (e: En
       >
         {PAGES.map((p, i) => (
           <div key={p.key} className="w-full shrink-0">
-            <ActivityRibbon type={p.key} entries={entries} />
+            <ActivityRibbon type={p.key} label={p.label} entries={entries} />
             <EntryList entries={byPage[i].shown} onEdit={onEdit} hasOlder={byPage[i].hasOlder} />
           </div>
         ))}
